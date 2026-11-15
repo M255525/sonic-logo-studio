@@ -31,7 +31,7 @@ export function degToSemi(deg, scale) {
 }
 export const midiToHz = m => 440 * Math.pow(2, (m - 69) / 12);
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const SOLFA = ['Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'];
+const SOLFA = ['Do', 'Do#', 'Re', 'Mi♭', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'Si♭', 'Si'];
 export const midiName = m => NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
 export const solfa = (m, keyIdx) => SOLFA[(((m - keyIdx) % 12) + 12) % 12];
 
