@@ -1,6 +1,6 @@
 # sonic-logo-studio — 品牌聲音 Logo 產生器
 
-靜態網頁（`index.html`＋`engine.js`＋`manual.html`＋PWA 檔），無建置步驟、無外部 JS 函式庫（只用 Google Fonts：Noto Sans TC、Space Mono）。port 8882。2026-11-15 建立（使用者從「聲音相關工具發想」清單選了這個，功能細節都是我自定）。2026-11-15 上線：公開 repo <https://github.com/M255525/sonic-logo-studio>（使用者自己 `gh repo create`），GitHub Pages（Actions workflow，push 到 master 自動部署）<https://m255525.github.io/sonic-logo-studio/>。visitor-badge `m255525.soniclogostudio`。尚未放進創作者小鎮。
+靜態網頁（`index.html`＋`engine.js`＋`manual.html`＋PWA 檔），無建置步驟、無外部 JS 函式庫（只用 Google Fonts：Noto Sans TC、Space Mono）。port 8882。2026-11-15 建立（使用者從「聲音相關工具發想」清單選了這個，功能細節都是我自定）。2026-11-15 上線：公開 repo <https://github.com/M255525/sonic-logo-studio>（使用者自己 `gh repo create`），GitHub Pages（Actions workflow，push 到 master 自動部署）<https://m255525.github.io/sonic-logo-studio/>。visitor-badge `m255525.soniclogostudio`。2026-11-15 已放進創作者小鎮的聲音廣場（接力線 c22）。
 
 警語另含 AI：金鑰只存本機、品牌描述會送到所選服務商、建議不一定準。
 
