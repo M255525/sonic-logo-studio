@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>品牌聲音 Logo 產生器</title>
+<meta name="description" content="輸入品牌名稱與個性，規則式產生 3～5 個音的品牌聲音 Logo，可編輯、情境試聽、匯出 WAV／MIDI 與聲音品牌說明書">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b1a17">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3eee4; --paper2: #ebe4d6; --card: #fbf8f2; --ink: #1b1a17; --ink2: #55514a; --line: #d6cdbb;
+    --red: #e2432a; --red2: #b93118; --teal: #1d6b66; --gold: #c99a2e;
+    --mono: "Space Mono", "Consolas", monospace;
+    --sans: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.7;
+    background-image: linear-gradient(var(--paper2) 1px, transparent 1px), linear-gradient(90deg, var(--paper2) 1px, transparent 1px); background-size: 28px 28px; }
+  #marqueeBar { position: fixed; top: 0; left: 0; right: 0; height: 26px; z-index: 50; background: var(--ink); overflow: hidden; display: none; align-items: center; }
+  #marqueeBar.on { display: flex; }
+  #marqueeTrack { display: inline-block; white-space: nowrap; padding-left: 100%; font-size: 12px; font-weight: 700; color: #ffd36b; animation: marquee-scroll 30s linear infinite; }
+  #marqueeBar:hover #marqueeTrack { animation-play-state: paused; }
+  @keyframes marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  body.has-marquee { padding-top: 26px; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 18px 16px 60px; }
+  header.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid var(--ink); padding-bottom: 12px; margin-bottom: 18px; }
+  .brandmark { display: flex; gap: 12px; align-items: center; }
+  .brandmark .sq { width: 52px; height: 52px; background: var(--red); display: grid; place-items: center; flex: none; }
+  .brandmark .sq svg { width: 34px; height: 34px; }
+  h1 { font-size: clamp(22px, 4.6vw, 32px); font-weight: 900; margin: 0; letter-spacing: 1px; line-height: 1.2; }
+  .sub { font-size: 13px; color: var(--ink2); margin: 2px 0 0; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+  button, .btn { font-family: inherit; font-size: 14px; cursor: pointer; border: 2px solid var(--ink); background: var(--card); color: var(--ink); padding: 6px 12px; border-radius: 0; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; line-height: 1.4; }
+  button:hover, .btn:hover { background: var(--ink); color: var(--paper); }
+  button.primary { background: var(--red); border-color: var(--red); color: #fff; }
+  button.primary:hover { background: var(--red2); border-color: var(--red2); }
+  button.ghost { border-color: transparent; background: transparent; padding: 4px 8px; }
+  button.ghost:hover { background: var(--paper2); color: var(--ink); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  .step { background: var(--card); border: 2px solid var(--ink); margin-bottom: 18px; }
+  .step > h2 { margin: 0; font-size: 17px; font-weight: 900; padding: 8px 14px; border-bottom: 2px solid var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .step > h2 .no { font-family: var(--mono); background: var(--ink); color: var(--paper); padding: 0 8px; font-size: 14px; }
+  .step > h2 .hint { font-weight: 400; font-size: 12.5px; color: var(--ink2); }
+  .step .body { padding: 14px; }
+
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 20px; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 13.5px; }
+  label.f small { font-weight: 400; color: var(--ink2); }
+  input[type=text], select, textarea { font-family: inherit; font-size: 15px; border: 2px solid var(--ink); background: #fff; padding: 6px 8px; border-radius: 0; color: var(--ink); width: 100%; }
+  input[type=color] { width: 48px; height: 36px; border: 2px solid var(--ink); padding: 2px; background: #fff; }
+  .axes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 20px; margin-top: 14px; }
+  .axis { display: grid; grid-template-columns: 3.2em 1fr 3.2em; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; }
+  .axis span:last-child { text-align: right; }
+  input[type=range] { width: 100%; accent-color: var(--red); }
+  .tones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .tone { border: 2px solid var(--ink); background: #fff; display: flex; flex-direction: column; align-items: center; padding: 4px 6px; min-width: 64px; }
+  .tone b { font-size: 20px; }
+  .tone select { font-size: 12px; padding: 2px; border-width: 1px; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+  .note { font-size: 12.5px; color: var(--ink2); }
+  .check { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  .check input { width: 18px; height: 18px; accent-color: var(--red); }
+
+  .cands { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .cand { border: 2px solid var(--ink); background: #fff; display: flex; flex-direction: column; }
+  .cand.sel { outline: 4px solid var(--red); outline-offset: -1px; }
+  .cand .mark { height: 96px; background: var(--ink); position: relative; cursor: pointer; }
+  .cand .mark svg { width: 100%; height: 100%; display: block; }
+  .cand .score { position: absolute; top: 6px; right: 6px; font-family: var(--mono); font-size: 12px; background: var(--paper); color: var(--ink); padding: 0 6px; font-weight: 700; }
+  .cand .info { padding: 8px 10px; flex: 1; }
+  .cand .nm { font-weight: 900; font-size: 15px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .tags span { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); padding: 0 5px; background: var(--paper); }
+  .cand .acts { display: flex; border-top: 2px solid var(--ink); }
+  .cand .acts button { flex: 1; border: 0; border-right: 2px solid var(--ink); justify-content: center; padding: 7px 4px; font-size: 13.5px; }
+  .cand .acts button:last-child { border-right: 0; }
+  .playing .mark::after { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); left: 0; animation: sweep var(--dur, 2s) linear forwards; }
+  @keyframes sweep { to { left: 100%; } }
+
+  .editor { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 860px) { .editor { grid-template-columns: minmax(0, 1fr); } }
+  .editor > div { min-width: 0; }
+  .roll { background: var(--ink); position: relative; height: 200px; border: 2px solid var(--ink); }
+  .roll svg { width: 100%; height: 100%; display: block; }
+  .roll .ph { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); left: 0; display: none; }
+  .roll.playing .ph { display: block; animation: sweep var(--dur, 2s) linear forwards; }
+  .notes { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; }
+  .nchip { flex: none; border: 2px solid var(--ink); background: #fff; width: 86px; display: flex; flex-direction: column; align-items: stretch; }
+  .nchip .nn { text-align: center; font-family: var(--mono); font-weight: 700; font-size: 13px; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .nchip .sol { text-align: center; font-weight: 900; font-size: 17px; }
+  .nchip .ud { display: flex; }
+  .nchip .ud button { flex: 1; border: 0; border-top: 1px solid var(--line); padding: 2px; justify-content: center; font-size: 13px; }
+  .nchip select { font-size: 12px; border: 0; border-top: 1px solid var(--line); padding: 3px 2px; }
+  .nchip.add { justify-content: center; align-items: center; border-style: dashed; cursor: pointer; font-weight: 900; min-height: 120px; background: transparent; }
+  .ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 10px; }
+  @media (max-width: 480px) { .ctrls { grid-template-columns: 1fr; } }
+  .ctrls label.f { font-size: 13px; }
+  .ctrls .val { font-family: var(--mono); font-weight: 700; }
+  .playrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .side h3 { margin: 0 0 6px; font-size: 15px; font-weight: 900; border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
+  .side ul { margin: 0 0 14px; padding-left: 1.2em; font-size: 13.5px; }
+  .side li { margin-bottom: 3px; }
+  .bigscore { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bigscore b { font-family: var(--mono); font-size: 40px; line-height: 1; color: var(--red); }
+  .tips li.ok::marker { content: '✔ '; color: var(--teal); }
+  .tips li.no::marker { content: '△ '; color: var(--red); }
+
+  .scenes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .scene { border: 2px solid var(--ink); background: #fff; cursor: pointer; display: flex; flex-direction: column; }
+  .scene .stage { aspect-ratio: 16 / 10; position: relative; overflow: hidden; background: #2a2824; }
+  .scene .cap { padding: 6px 10px; font-size: 13px; border-top: 2px solid var(--ink); display: flex; justify-content: space-between; gap: 6px; }
+  .scene .cap b { font-size: 14px; }
+  .scene .cap span { font-family: var(--mono); font-size: 11.5px; color: var(--ink2); }
+  /* App 開啟 */
+  .sc-app .stage { background: #d9d3c6; display: grid; place-items: center; }
+  .phone { width: 34%; aspect-ratio: 9 / 18; background: #111; border-radius: 12px; padding: 5%; position: relative; }
+  .phone .scr { width: 100%; height: 100%; background: #fff; border-radius: 6px; display: grid; place-items: center; overflow: hidden; }
+  .appicon { width: 46%; aspect-ratio: 1; border-radius: 22%; background: var(--bc, var(--red)); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: clamp(12px, 2.4vw, 20px); transform: scale(.6); opacity: .25; }
+  .scene.on .appicon { animation: pop .5s cubic-bezier(.3, 1.6, .5, 1) forwards; }
+  @keyframes pop { to { transform: scale(1); opacity: 1; } }
+  /* 片頭 */
+  .sc-intro .stage { background: #0e0e0e; display: grid; place-items: center; }
+  .intro-t { color: #fff; font-weight: 900; font-size: clamp(16px, 3vw, 26px); letter-spacing: 3px; opacity: .15; text-align: center; padding: 0 8px; }
+  .intro-bars { position: absolute; left: 10%; right: 10%; bottom: 18%; height: 18%; display: flex; gap: 4%; align-items: flex-end; }
+  .intro-bars i { flex: 1; background: var(--bc, var(--red)); height: 10%; opacity: .4; }
+  .scene.on .intro-t { animation: fadein 1.2s ease forwards; }
+  .scene.on .intro-bars i { animation: bar .5s ease forwards; }
+  @keyframes fadein { to { opacity: 1; letter-spacing: 6px; } }
+  @keyframes bar { to { height: var(--h); opacity: 1; } }
+  /* 門市 */
+  .sc-shop .stage { background: linear-gradient(#c9bfae 0 18%, #6f8e8a 18% 100%); }
+  .shop-sign { position: absolute; top: 3%; left: 0; right: 0; text-align: center; font-weight: 900; color: var(--ink); font-size: clamp(12px, 2.2vw, 17px); }
+  .door { position: absolute; top: 24%; bottom: 0; width: 30%; background: rgba(220, 240, 245, .75); border: 3px solid #333; }
+  .door.l { left: 20%; } .door.r { right: 20%; }
+  .shop-in { position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); font-size: clamp(20px, 4vw, 34px); opacity: 0; }
+  .scene.on .door.l { animation: dl 1s ease forwards; }
+  .scene.on .door.r { animation: dr 1s ease forwards; }
+  .scene.on .shop-in { animation: fadein2 .6s .5s ease forwards; }
+  @keyframes dl { to { transform: translateX(-80%); } }
+  @keyframes dr { to { transform: translateX(80%); } }
+  @keyframes fadein2 { to { opacity: 1; } }
+  /* 廣告結尾 */
+  .sc-end .stage { background: var(--bc, var(--red)); display: grid; place-items: center; text-align: center; color: #fff; }
+  .end-n { font-weight: 900; font-size: clamp(18px, 3.4vw, 28px); transform: translateY(20px); opacity: 0; }
+  .end-s { font-size: clamp(11px, 1.8vw, 14px); opacity: 0; margin-top: 4px; }
+  .scene.on .end-n { animation: up .6s ease forwards; }
+  .scene.on .end-s { animation: fadein2 .6s .6s ease forwards; }
+  @keyframes up { to { transform: none; opacity: 1; } }
+
+  .exports { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .exp { border: 2px solid var(--ink); background: #fff; padding: 10px 12px; }
+  .exp h3 { margin: 0 0 6px; font-size: 15px; font-weight: 900; }
+  .exp .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .exp p { margin: 0 0 8px; font-size: 13px; color: var(--ink2); }
+  textarea.md { font-family: var(--mono); font-size: 12px; height: 160px; margin-top: 8px; resize: vertical; }
+
+  .mine { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .mi { border: 2px solid var(--ink); background: #fff; display: flex; align-items: stretch; }
+  .mi .sw { width: 64px; background: var(--ink); flex: none; cursor: pointer; }
+  .mi .sw svg { width: 100%; height: 100%; display: block; }
+  .mi .tx { padding: 6px 8px; flex: 1; min-width: 0; font-size: 13px; }
+  .mi .tx b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mi .tx .bt { display: flex; gap: 2px; margin-top: 2px; flex-wrap: wrap; }
+  .mi .tx .bt button { padding: 1px 6px; font-size: 12px; border-width: 1px; }
+  .empty { color: var(--ink2); font-size: 13.5px; padding: 6px 0; }
+
+  .warnbox { font-size: 12.5px; line-height: 1.75; background: #fff4ef; border: 2px solid var(--red); padding: 10px 12px; margin-top: 18px; }
+  footer { margin-top: 18px; font-size: 12.5px; color: var(--ink2); text-align: center; }
+  footer a { color: inherit; }
+
+  .modal { position: fixed; inset: 0; background: rgba(27, 26, 23, .6); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal .box { background: var(--card); border: 3px solid var(--ink); max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .modal h3 { margin: 0; font-size: 19px; font-weight: 900; }
+  details.set-sec { border: 2px solid var(--ink); background: #fff; }
+  details.set-sec > summary { list-style: none; cursor: pointer; padding: 8px 12px; font-weight: 900; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+  details.set-sec > summary::-webkit-details-marker { display: none; }
+  details.set-sec > summary::before { content: '▸'; margin-right: 6px; color: var(--red); transition: transform .15s; }
+  details.set-sec[open] > summary::before { transform: rotate(90deg); }
+  details.set-sec > summary .t { flex: 1; }
+  details.set-sec > summary .v { font-weight: 400; font-size: 12px; color: var(--ink2); text-align: right; }
+  .set-body { padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+  .set-body label.row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .set-body label.row select { width: auto; }
+  .set-tools { display: flex; gap: 6px; justify-content: flex-end; }
+  .set-tools button { font-size: 12px; padding: 2px 8px; border-width: 1px; }
+  .about-links { display: flex; flex-wrap: wrap; gap: 6px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 8px 16px; font-weight: 700; z-index: 200; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; text-align: center; }
+  .toast.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01s !important; } }
+</style>
+</head>
+<body>
+<div id="marqueeBar"><div id="marqueeTrack"></div></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brandmark">
+      <div class="sq" aria-hidden="true"><svg viewBox="0 0 34 34"><rect x="3" y="18" width="5" height="12" fill="#fff"/><rect x="11" y="10" width="5" height="20" fill="#fff"/><rect x="19" y="4" width="5" height="26" fill="#fff"/><rect x="27" y="14" width="5" height="16" fill="#fff"/></svg></div>
+      <div>
+        <h1>品牌聲音 Logo 產生器</h1>
+        <p class="sub">輸入品牌名稱與個性 → 產生 3～5 個音的招牌聲音 → 編輯、情境試聽、匯出 WAV／MIDI／聲音品牌說明書</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="settings-btn" type="button">⚙ 常用設定</button>
+      <a class="btn" href="manual.html" target="_blank" rel="noopener">📖 操作手冊</a>
+      <button id="installBtn" type="button">📲 加入主畫面</button>
+      <button id="warn-btn" type="button">⚠ 使用警語</button>
+    </div>
+  </header>
+
+  <!-- 1 品牌資料 -->
+  <section class="step" id="step1">
+    <h2><span class="no">01</span>品牌資料<span class="hint">名稱字數會決定音符數（中文一字一音），個性決定音階、樂器和速度</span></h2>
+    <div class="body">
+      <div class="form-grid">
+        <label class="f">品牌名稱 <input type="text" id="b-name" maxlength="20" placeholder="例如：阿嬤的豆花、星光咖啡、Mark Coffee"></label>
+        <label class="f">產業 <small>選了會自動帶入個性，之後還可以再調</small><select id="b-ind"></select></label>
+        <label class="f">標語（情境試聽的廣告結尾用，可留白）<input type="text" id="b-slogan" maxlength="24" placeholder="例如：一碗暖到心裡"></label>
+        <div class="form-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+          <label class="f">音符數 <select id="b-notes"><option value="auto">依名稱</option><option value="3">3 個</option><option value="4">4 個</option><option value="5">5 個</option><option value="6">6 個</option></select></label>
+          <label class="f">長度 <select id="b-len"><option value="short">短促</option><option value="std">標準</option><option value="long">餘韻長</option></select></label>
+          <label class="f">品牌色 <input type="color" id="b-color" value="#e2432a"></label>
+        </div>
+      </div>
+      <div class="axes" id="axes"></div>
+      <label class="check" style="margin-top:14px"><input type="checkbox" id="b-usetone"> 第一個候選的旋律跟著品牌名的國語聲調走（聽起來像在唱店名）</label>
+      <div id="tone-box" hidden>
+        <div class="note">請幫每個字選聲調（工具不會自動判斷讀音）。一聲高平、二聲往上、三聲低、四聲往下、輕聲跟前一個音。</div>
+        <div class="tones" id="tones"></div>
+      </div>
+      <div class="row-actions">
+        <button class="primary" id="gen-btn" type="button">🎲 產生 6 個聲音 Logo</button>
+        <button id="more-btn" type="button" disabled>↻ 換一批</button>
+        <span class="note" id="gen-note">同樣的名稱與設定，每次都會得到同樣的結果；想要不同的請按「換一批」。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 候選 -->
+  <section class="step" id="step2" hidden>
+    <h2><span class="no">02</span>挑一個喜歡的<span class="hint">點黑色色塊試聽，右上角是辨識度健檢分數</span></h2>
+    <div class="body"><div class="cands" id="cands"></div></div>
+  </section>
+
+  <!-- 3 編輯 -->
+  <section class="step" id="step3" hidden>
+    <h2><span class="no">03</span>微調<span class="hint" id="ed-title"></span></h2>
+    <div class="body">
+      <div class="editor">
+        <div>
+          <div class="roll" id="roll"><svg id="roll-svg" preserveAspectRatio="none"></svg><div class="ph"></div></div>
+          <div class="notes" id="notes"></div>
+          <div class="ctrls">
+            <label class="f">樂器 <select id="e-inst"></select></label>
+            <label class="f">調性 <span style="display:flex;gap:6px"><select id="e-key"></select><select id="e-scale"></select></span></label>
+            <label class="f">速度 <span class="val" id="e-bpm-v"></span><input type="range" id="e-bpm" min="60" max="180" step="1"></label>
+            <label class="f">殘響（空間感） <span class="val" id="e-rev-v"></span><input type="range" id="e-rev" min="0" max="0.9" step="0.05"></label>
+            <label class="f">音高
+              <span style="display:flex;gap:6px"><button type="button" id="e-oct-d">低八度</button><button type="button" id="e-oct-u">高八度</button><button type="button" id="e-rev-mel" title="把旋律前後顛倒，最後一音維持最長">顛倒</button></span></label>
+            <div style="display:flex;flex-direction:column;gap:4px;justify-content:center">
+              <label class="check"><input type="checkbox" id="e-chord"> 收尾加和弦墊底</label>
+              <label class="check"><input type="checkbox" id="e-bass"> 收尾加低音</label>
+            </div>
+          </div>
+          <div class="playrow">
+            <button class="primary" type="button" data-play="std">▶ 標準版</button>
+            <button type="button" data-play="short">▶ 短版（前 3 音）</button>
+            <button type="button" data-play="long">▶ 加長版</button>
+            <button type="button" id="save-btn">♡ 存到我的聲音 Logo</button>
+            <button type="button" id="undo-btn" disabled>↶ 還原</button>
+          </div>
+        </div>
+        <div class="side">
+          <h3>辨識度健檢</h3>
+          <div class="bigscore"><b id="ev-score">--</b><span>/ 100　<span class="note">自訂規則評分，僅供參考</span></span></div>
+          <ul class="tips" id="ev-tips"></ul>
+          <h3>為什麼這樣配</h3>
+          <ul id="ex-list"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 情境 -->
+  <section class="step" id="step4" hidden>
+    <h2><span class="no">04</span>情境試聽<span class="hint">點一下畫面，想像你的顧客在這些地方聽到它</span></h2>
+    <div class="body">
+      <div class="scenes">
+        <div class="scene sc-app" data-v="short" tabindex="0"><div class="stage"><div class="phone"><div class="scr"><div class="appicon" id="sc-icon">A</div></div></div></div><div class="cap"><b>📱 App 開啟／通知</b><span>短版</span></div></div>
+        <div class="scene sc-intro" data-v="std" tabindex="0"><div class="stage"><div class="intro-t" id="sc-intro-t">品牌</div><div class="intro-bars" id="sc-bars"></div></div><div class="cap"><b>🎬 短影音片頭</b><span>標準版</span></div></div>
+        <div class="scene sc-shop" data-v="std" tabindex="0"><div class="stage"><div class="shop-sign" id="sc-sign">品牌</div><div class="door l"></div><div class="door r"></div><div class="shop-in">🙋</div></div><div class="cap"><b>🏪 門市自動門／結帳</b><span>標準版</span></div></div>
+        <div class="scene sc-end" data-v="long" tabindex="0"><div class="stage"><div><div class="end-n" id="sc-end-n">品牌</div><div class="end-s" id="sc-end-s"></div></div></div><div class="cap"><b>📺 廣告結尾</b><span>加長版</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 匯出 -->
+  <section class="step" id="step5" hidden>
+    <h2><span class="no">05</span>帶走<span class="hint">聲音在你的瀏覽器裡合成，不上傳任何資料</span></h2>
+    <div class="body">
+      <div class="exports">
+        <div class="exp"><h3>🎧 音檔 WAV</h3><p>直接放進影片剪輯、簡報、App、LINE 官方帳號素材。</p>
+          <div class="btns"><button type="button" data-wav="short">短版</button><button type="button" data-wav="std" class="primary">標準版</button><button type="button" data-wav="long">加長版</button></div></div>
+        <div class="exp"><h3>🎼 MIDI</h3><p>交給配樂師或用 GarageBand、FL Studio 換成真樂器重新編曲。</p>
+          <div class="btns"><button type="button" data-mid="std">標準版 .mid</button><button type="button" data-mid="long">加長版 .mid</button></div></div>
+        <div class="exp"><h3>🔗 分享連結</h3><p>把這個聲音傳給同事或老闆聽，對方打開就能播放與修改。</p>
+          <div class="btns"><button type="button" id="share-btn">複製分享連結</button></div></div>
+        <div class="exp" style="grid-column: 1 / -1"><h3>📘 聲音品牌說明書</h3><p>音符、速度、樂器、各版本用途與注意事項，可以貼進品牌手冊。</p>
+          <div class="btns"><button type="button" id="md-copy">複製文字</button><button type="button" id="md-dl">下載 .md</button><button type="button" id="md-print">列印／存 PDF</button></div>
+          <textarea class="md" id="md-text" readonly></textarea></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 我的 -->
+  <section class="step" id="mine-sec">
+    <h2><span class="no">♡</span>我的聲音 Logo<span class="hint">只存在這台裝置的瀏覽器</span></h2>
+    <div class="body"><div class="mine" id="mine"></div></div>
+  </section>
+
+  <div class="warnbox">
+    ⚠ <b>使用警語</b>：本工具僅供品牌聲音發想、教學示範與個人練習使用，工具本身禁止未經授權公開發布、販售或商業化使用。
+    旋律由規則式組合產生，<b>不保證與既有商標聲音、廣告歌或歌曲不相似</b>；把產生的聲音正式用於商業或申請聲音商標前，請先查詢經濟部智慧財產局商標檢索系統，並請專業人士確認。辨識度分數是本工具自訂的規則，不代表市場測試結果。
+  </div>
+  <footer>
+    創作者：蔡豐全（Mark Tsai）｜<a href="manual.html#creator" target="_blank" rel="noopener">創作者介紹與聯絡方式</a><br>
+    <img src="https://visitor-badge.laobi.icu/badge?page_id=m255525.soniclogostudio" alt="訪客次數" style="vertical-align:middle;height:20px;margin-top:6px;">
+  </footer>
+</div>
+
+<div id="warn-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="warn-h">
+  <div class="box">
+    <h3 id="warn-h">⚠ 使用前請先看</h3>
+    <div style="font-size:14px">・本工具僅供品牌聲音發想、教學示範與個人練習使用，工具本身禁止未經授權公開發布、販售或商業化使用。<br>
+      ・旋律由規則式組合產生，<b>不保證與既有商標聲音、廣告歌或歌曲不相似</b>。正式商用或申請聲音商標前，請先到經濟部智慧財產局商標檢索系統查詢，並請專業人士確認；本工具不負擔任何侵權責任。<br>
+      ・辨識度健檢分數是本工具自訂的規則評分，僅供參考，不代表消費者或市場測試結果。<br>
+      ・所有聲音都在你的瀏覽器裡用程式即時合成，<b>不用任何音檔素材，品牌資料也不會上傳</b>。<br>
+      ・試聽前請先把音量調小一點，戴耳機時尤其注意。</div>
+    <div style="font-size:12px;color:var(--ink2)">創作者：蔡豐全（Mark Tsai）</div>
+    <button id="warn-ok" class="primary" type="button" style="justify-content:center;font-size:16px">我知道了</button>
+  </div>
+</div>
+
+<div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="set-h">
+  <div class="box">
+    <h3 id="set-h">⚙ 常用設定</h3>
+    <div class="set-tools"><button type="button" id="set-expand">全部展開</button><button type="button" id="set-collapse">全部收合</button></div>
+    <details class="set-sec" data-sec="play"><summary><span class="t">🔊 播放</span><span class="v" id="sv-play"></span></summary>
+      <div class="set-body">
+        <label class="row">試聽音量 <span style="display:flex;gap:8px;align-items:center;min-width:180px"><input type="range" id="set-vol" min="0.1" max="1" step="0.05"> <b id="set-vol-v"></b></span></label>
+        <label class="row">情境試聽播放動畫 <input type="checkbox" id="set-anim"></label>
+        <label class="row">產生後自動播放第一個 <input type="checkbox" id="set-autoplay"></label>
+      </div></details>
+    <details class="set-sec" data-sec="export"><summary><span class="t">💾 匯出</span><span class="v" id="sv-export"></span></summary>
+      <div class="set-body">
+        <label class="row">WAV 取樣率 <select id="set-sr"><option value="44100">44.1 kHz（音樂、一般用途）</option><option value="48000">48 kHz（影片剪輯）</option></select></label>
+        <label class="row">WAV 聲道 <select id="set-ch"><option value="2">立體聲</option><option value="1">單聲道（App 提示音、檔案較小）</option></select></label>
+        <label class="row">音量正規化（-1 dBFS） <input type="checkbox" id="set-norm"></label>
+      </div></details>
+    <details class="set-sec" data-sec="data"><summary><span class="t">🗂 資料</span><span class="v" id="sv-data"></span></summary>
+      <div class="set-body">
+        <button id="clear-mine" type="button">清除「我的聲音 Logo」全部紀錄</button>
+        <button id="clear-brand" type="button">清除上次填的品牌資料</button>
+      </div></details>
+    <details class="set-sec" data-sec="about"><summary><span class="t">ℹ 關於本工具</span><span class="v">創作者・手冊・警語</span></summary>
+      <div class="set-body">
+        <div>👤 創作者：<b>蔡豐全（Mark Tsai）</b>，創業輔導與數位轉型顧問、講師，推廣 AI 工具運用於教學情境。聯絡方式見操作手冊的創作者介紹。</div>
+        <div class="about-links">
+          <a class="btn" href="manual.html" target="_blank" rel="noopener">📖 操作手冊</a>
+          <a class="btn" href="manual.html#creator" target="_blank" rel="noopener">👤 創作者完整介紹</a>
+          <button type="button" id="about-warn">⚠ 使用警語</button>
+          <button type="button" id="about-install">📲 加入主畫面</button>
+        </div>
+        <div><img src="https://visitor-badge.laobi.icu/badge?page_id=m255525.soniclogostudio" alt="訪客次數" style="height:20px"></div>
+      </div></details>
+    <button id="settings-ok" class="primary" type="button" style="justify-content:center;font-size:16px">儲存並關閉</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import * as E from './engine.js';
+const $ = id => document.getElementById(id);
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const lsDel = k => { try { localStorage.removeItem(k); } catch (e) {} };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200); }
+
+/* ======================= 設定 ======================= */
+const SET_KEY = 'sls-settings';
+const SET = Object.assign({ vol: 0.7, anim: true, autoplay: false, sr: 44100, ch: 2, norm: true }, (() => { try { return JSON.parse(lsGet(SET_KEY, '{}')); } catch (e) { return {}; } })());
+const saveSet = () => lsSet(SET_KEY, JSON.stringify(SET));
+
+/* ======================= 狀態 ======================= */
+let brand = Object.assign(E.defaultBrand(), { slogan: '', color: '#e2432a' }, (() => { try { return JSON.parse(lsGet('sls-brand', '{}')); } catch (e) { return {}; } })());
+let batch = 0, cands = [], cur = null, curFrom = -1, undoStack = [];
+const saveBrand = () => lsSet('sls-brand', JSON.stringify(brand));
+
+/* ======================= 合成 ======================= */
+let AC = null;
+function ac() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
+function seededNoise(seed) { const r = E.rng(seed); return () => r() * 2 - 1; }
+function makeIR(ctx, sec, seed) {
+  const len = Math.floor(ctx.sampleRate * sec), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c), n = seededNoise(seed + c * 977);
+    for (let i = 0; i < len; i++) d[i] = n() * Math.pow(1 - i / len, 3.2) * (i < ctx.sampleRate * 0.012 ? i / (ctx.sampleRate * 0.012) : 1);
+  }
+  return ir;
+}
+function env(g, t, a, peak, dec, endAt) {
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(peak, t + a);
+  g.gain.exponentialRampToValueAtTime(0.0001, Math.max(t + a + 0.02, endAt != null ? endAt : t + a + dec));
+}
+function osc(ctx, type, f, t, stop) { const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); o.start(t); o.stop(stop); return o; }
+function voice(ctx, out, e, inst) {
+  const f = E.midiToHz(e.midi), t = e.t, v = e.vel, d = e.dur;
+  const g = ctx.createGain(); g.connect(out);
+  switch (inst) {
+    case 'bell': {
+      const c = osc(ctx, 'sine', f, t, t + 2.4), m = osc(ctx, 'sine', f * 3.5, t, t + 2.4), mg = ctx.createGain();
+      mg.gain.setValueAtTime(f * 2.2, t); mg.gain.exponentialRampToValueAtTime(f * 0.05, t + 1.2); m.connect(mg).connect(c.frequency);
+      const h = osc(ctx, 'sine', f * 2, t, t + 1.2), hg = ctx.createGain(); env(hg, t, 0.003, 0.18 * v, 0.6); h.connect(hg).connect(out);
+      c.connect(g); env(g, t, 0.004, 0.42 * v, 1.8); break;
+    }
+    case 'marimba': {
+      const c = osc(ctx, 'sine', f, t, t + 0.9), h = osc(ctx, 'sine', f * 4, t, t + 0.2), hg = ctx.createGain();
+      env(hg, t, 0.002, 0.22 * v, 0.07); h.connect(hg).connect(out);
+      const h2 = osc(ctx, 'sine', f * 10, t, t + 0.05), h2g = ctx.createGain(); env(h2g, t, 0.001, 0.05 * v, 0.02); h2.connect(h2g).connect(out);
+      c.connect(g); env(g, t, 0.003, 0.6 * v, 0.55); break;
+    }
+    case 'epiano': {
+      const c = osc(ctx, 'sine', f, t, t + d + 1.4), m = osc(ctx, 'sine', f, t, t + d + 1.4), mg = ctx.createGain();
+      mg.gain.setValueAtTime(f * 1.2, t); mg.gain.exponentialRampToValueAtTime(f * 0.08, t + 0.5); m.connect(mg).connect(c.frequency);
+      const o2 = osc(ctx, 'triangle', f * 2, t, t + d + 1), o2g = ctx.createGain(); env(o2g, t, 0.005, 0.07 * v, 0.6); o2.connect(o2g).connect(out);
+      c.connect(g); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.45 * v, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.18 * v, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(d, 0.3) + 0.9); break;
+    }
+    case 'pluck': {
+      const o = osc(ctx, 'sawtooth', f, t, t + 1), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 1.5;
+      lp.frequency.setValueAtTime(Math.min(f * 10, 12000), t); lp.frequency.exponentialRampToValueAtTime(f * 1.2, t + 0.35);
+      o.connect(lp).connect(g); env(g, t, 0.002, 0.42 * v, 0.7); break;
+    }
+    case 'synth': {
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 5;
+      lp.frequency.setValueAtTime(800, t); lp.frequency.linearRampToValueAtTime(3800, t + 0.05); lp.frequency.exponentialRampToValueAtTime(1400, t + d + 0.1);
+      [-8, 8].forEach(cents => { const o = osc(ctx, 'sawtooth', f, t, t + d + 0.5); o.detune.value = cents; o.connect(lp); });
+      lp.connect(g); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.22 * v, t + 0.01);
+      g.gain.setTargetAtTime(0.15 * v, t + 0.02, 0.1); g.gain.setTargetAtTime(0.0001, t + d, 0.09); break;
+    }
+    case 'chip': {
+      const o = osc(ctx, 'square', f, t, t + d + 0.2); o.connect(g);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.13 * v, t + 0.004); g.gain.setValueAtTime(0.13 * v, t + Math.max(0.01, d * 0.85));
+      g.gain.linearRampToValueAtTime(0.0001, t + d * 0.85 + 0.04); break;
+    }
+    case 'pad': {
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.7;
+      [-10, 0, 10].forEach(cents => { const o = osc(ctx, 'sawtooth', f, t, t + d + 2); o.detune.value = cents; o.connect(lp); });
+      const s = osc(ctx, 'sine', f, t, t + d + 2); s.connect(lp);
+      lp.connect(g); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16 * v, t + 0.12); g.gain.setTargetAtTime(0.0001, t + d + 0.1, 0.45); break;
+    }
+    case 'whistle': {
+      const o = osc(ctx, 'sine', f * 0.96, t, t + d + 0.4); o.frequency.exponentialRampToValueAtTime(f, t + 0.06);
+      const lfo = osc(ctx, 'sine', 5.6, t, t + d + 0.4), lg = ctx.createGain(); lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * 0.006, t + 0.25); lfo.connect(lg).connect(o.frequency);
+      const n = ctx.createBufferSource(); n.buffer = noiseBuf(ctx); const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 8;
+      const ng = ctx.createGain(); ng.gain.value = 0.05 * v; n.connect(bp).connect(ng).connect(g); n.start(t); n.stop(t + d + 0.3);
+      o.connect(g); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.4 * v, t + 0.04); g.gain.setTargetAtTime(0.0001, t + d * 0.9, 0.05); break;
+    }
+    case 'drop': {
+      const o = osc(ctx, 'sine', f * 1.7, t, t + 0.6); o.frequency.exponentialRampToValueAtTime(f, t + 0.045);
+      const h = osc(ctx, 'sine', f * 2.01, t, t + 0.3), hg = ctx.createGain(); env(hg, t, 0.002, 0.12 * v, 0.12); h.connect(hg).connect(out);
+      o.connect(g); env(g, t, 0.002, 0.5 * v, 0.32); break;
+    }
+    default: { const o = osc(ctx, 'sine', f, t, t + d + 0.5); o.connect(g); env(g, t, 0.005, 0.4 * v, d + 0.3); }
+  }
+}
+let _noise = null;
+function noiseBuf(ctx) {
+  if (_noise && _noise.sampleRate === ctx.sampleRate) return _noise;
+  const len = ctx.sampleRate, b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0), n = seededNoise(42);
+  for (let i = 0; i < len; i++) d[i] = n();
+  return (_noise = b);
+}
+function softVoice(ctx, out, e, kind) {
+  const f = E.midiToHz(e.midi), t = e.t, d = e.dur;
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = kind === 'bass' ? 500 : 1800;
+  const g = ctx.createGain(); lp.connect(g).connect(out);
+  const a = osc(ctx, kind === 'bass' ? 'triangle' : 'sine', f, t, t + d + 2), b = osc(ctx, 'triangle', f * (kind === 'bass' ? 1 : 2), t, t + d + 2);
+  const bg = ctx.createGain(); bg.gain.value = 0.25; a.connect(lp); b.connect(bg).connect(lp);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime((kind === 'bass' ? 0.55 : 0.2) * e.vel, t + (kind === 'bass' ? 0.01 : 0.08));
+  g.gain.setTargetAtTime(0.0001, t + d, kind === 'bass' ? 0.25 : 0.5);
+}
+const renderCache = new Map();
+async function render(logo, variant = 'std', sr = 44100, ch = 2) {
+  const key = JSON.stringify([logo.notes, logo.inst, logo.bpm, logo.root, logo.scale, logo.chord, logo.bass, logo.reverb, variant, sr, ch, SET.norm]);
+  if (renderCache.has(key)) return renderCache.get(key);
+  const { events, total } = E.toEvents(logo, variant);
+  const len = Math.ceil(total * sr);
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const ctx = new OAC(2, len, sr);
+  const dry = ctx.createGain(), wet = ctx.createGain(), bus = ctx.createGain();
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 3; comp.attack.value = 0.003; comp.release.value = 0.2;
+  bus.connect(dry).connect(comp); bus.connect(wet);
+  const conv = ctx.createConvolver(); conv.buffer = makeIR(ctx, 0.8 + logo.reverb * 2.6, 7);
+  wet.gain.value = logo.reverb * 0.9; dry.gain.value = 1 - logo.reverb * 0.25;
+  wet.connect(conv).connect(comp); comp.connect(ctx.destination);
+  const pans = { lead: 0, chord: 0.25, bass: 0 };
+  events.forEach((e, i) => {
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    const out = p || bus;
+    if (p) { p.pan.value = e.part === 'chord' ? ((i % 3) - 1) * pans.chord : 0; p.connect(bus); }
+    if (e.part === 'lead') voice(ctx, out, e, logo.inst); else softVoice(ctx, out, e, e.part);
+  });
+  const buf = await ctx.startRendering();
+  let chans = [buf.getChannelData(0), buf.getChannelData(1)];
+  if (ch === 1) { const m = new Float32Array(chans[0].length); for (let i = 0; i < m.length; i++) m[i] = (chans[0][i] + chans[1][i]) / 2; chans = [m]; }
+  if (SET.norm) E.normalize(chans, sr);
+  const res = { chans, sr, total };
+  if (renderCache.size > 40) renderCache.delete(renderCache.keys().next().value);
+  renderCache.set(key, res);
+  return res;
+}
+let curSrc = null;
+async function play(logo, variant = 'std', onStart) {
+  const ctx = ac();
+  const r = await render(logo, variant, ctx.sampleRate, 2);
+  if (curSrc) { try { curSrc.stop(); } catch (e) {} }
+  const b = ctx.createBuffer(r.chans.length, r.chans[0].length, r.sr);
+  r.chans.forEach((c, i) => b.copyToChannel(c, i));
+  const s = ctx.createBufferSource(); s.buffer = b;
+  const g = ctx.createGain(); g.gain.value = SET.vol;
+  s.connect(g).connect(ctx.destination); s.start();
+  curSrc = s;
+  const playLen = E.toEvents(logo, variant).events.reduce((m, e) => Math.max(m, e.t + e.dur), 0);
+  if (onStart) onStart(playLen, r.total);
+  return s;
+}
+
+/* ======================= 視覺：聲紋 ======================= */
+function markSVG(logo, opt = {}) {
+  const { events } = E.toEvents(logo, 'std');
+  const lead = events.filter(e => e.part === 'lead');
+  const end = lead.reduce((m, e) => Math.max(m, e.t + e.dur), 0);
+  const ms = lead.map(e => e.midi), lo = Math.min(...ms) - 2, hi = Math.max(...ms) + 2;
+  const W = 300, H = 100, padX = 12;
+  const x = t => padX + (t / end) * (W - padX * 2);
+  const y = m => H - 12 - ((m - lo) / Math.max(1, hi - lo)) * (H - 28);
+  const col = opt.color || '#e2432a';
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">`;
+  if (opt.grid) for (let m = Math.ceil(lo); m <= hi; m++) { const yy = y(m); s += `<line x1="0" x2="${W}" y1="${yy}" y2="${yy}" stroke="#ffffff" stroke-opacity="${(m - logo.root) % 12 === 0 ? .25 : .06}" stroke-width="1"/>`; }
+  lead.forEach((e, i) => {
+    const w = Math.max(6, x(e.t + e.dur) - x(e.t) - 4);
+    s += `<rect x="${x(e.t) + 1}" y="${y(e.midi) - 5}" width="${w}" height="10" fill="${i === lead.length - 1 ? col : '#f3eee4'}"/>`;
+    if (opt.labels) s += `<text x="${x(e.t) + 3}" y="${y(e.midi) - 9}" font-size="10" font-family="Space Mono, monospace" fill="#f3eee4" opacity=".8">${E.solfa(e.midi, logo.keyIdx)}</text>`;
+  });
+  return s + '</svg>';
+}
+
+/* ======================= 1 品牌資料 ======================= */
+const indSel = $('b-ind');
+Object.entries(E.INDUSTRIES).forEach(([k, v]) => indSel.add(new Option(v.label, k)));
+$('axes').innerHTML = E.AXES.map(a => `<div class="axis"><span>${a.left}</span><input type="range" min="-2" max="2" step="1" id="ax-${a.key}" aria-label="${a.left}到${a.right}"><span>${a.right}</span></div>`).join('');
+function fillBrand() {
+  $('b-name').value = brand.name; indSel.value = brand.industry; $('b-notes').value = String(brand.notes); $('b-len').value = brand.length;
+  $('b-slogan').value = brand.slogan || ''; $('b-color').value = brand.color || '#e2432a'; $('b-usetone').checked = !!brand.useTones;
+  E.AXES.forEach(a => { $('ax-' + a.key).value = brand[a.key]; });
+  renderTones();
+}
+function readBrand() {
+  brand.name = $('b-name').value.trim(); brand.industry = indSel.value; brand.notes = $('b-notes').value === 'auto' ? 'auto' : +$('b-notes').value;
+  brand.length = $('b-len').value; brand.slogan = $('b-slogan').value.trim(); brand.color = $('b-color').value; brand.useTones = $('b-usetone').checked;
+  E.AXES.forEach(a => { brand[a.key] = +$('ax-' + a.key).value; });
+  saveBrand();
+}
+function renderTones() {
+  const sy = E.nameSyllables($('b-name').value).slice(0, 6);
+  $('tone-box').hidden = !$('b-usetone').checked;
+  brand.tones = (brand.tones || []).slice(0, sy.length);
+  $('tones').innerHTML = sy.length ? sy.map((s, i) => `<div class="tone"><b>${esc(s.split('·')[0])}</b><select data-i="${i}"><option value="0">（請選）</option>${Object.entries(E.TONES).map(([k, v]) => `<option value="${k}" ${+(brand.tones[i] || 0) === +k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`).join('')
+    : '<span class="note">先輸入品牌名稱。</span>';
+  if (E.nameSyllables($('b-name').value).length > 6) $('tones').insertAdjacentHTML('beforeend', '<span class="note">名稱超過 6 個音節，只取前 6 個。</span>');
+}
+$('tones').addEventListener('change', e => { const i = +e.target.dataset.i; brand.tones[i] = +e.target.value || null; saveBrand(); });
+indSel.addEventListener('change', () => { const p = E.INDUSTRIES[indSel.value]; E.AXES.forEach(a => { $('ax-' + a.key).value = p[a.key]; }); });
+$('b-name').addEventListener('input', renderTones);
+$('b-usetone').addEventListener('change', renderTones);
+$('b-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('gen-btn').click(); });
+
+function genCands() {
+  readBrand();
+  const nSy = E.nameSyllables(brand.name).slice(0, 6).length;
+  const toneReady = brand.useTones && nSy > 0 && [...Array(nSy).keys()].every(i => +brand.tones[i] >= 1);
+  if (brand.useTones && !toneReady) toast('還有字沒選聲調，這次先不產生「名稱聲調型」');
+  const gb = { ...brand, useTones: toneReady };
+  cands = E.generateSet(gb, 6, batch * 6);
+  if (batch && toneReady) cands[0] = E.generate(gb, 0);
+  cands.forEach(c => { if (batch) c.batch = batch; });
+  renderCands();
+  $('step2').hidden = false; $('more-btn').disabled = false;
+  if (SET.autoplay) playCand(0);
+}
+$('gen-btn').addEventListener('click', () => { batch = 0; genCands(); $('step2').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+$('more-btn').addEventListener('click', () => { batch++; genCands(); });
+
+/* ======================= 2 候選 ======================= */
+function tagHTML(l) {
+  return `<span>${E.KEYS[l.keyIdx]} ${E.SCALES[l.scale].label}</span><span>${E.INSTRUMENTS[l.inst].label}</span><span>${l.bpm} BPM</span><span>${E.durationSec(l).toFixed(1)}s</span>`;
+}
+function renderCands() {
+  $('cands').innerHTML = cands.map((l, i) => {
+    const ev = E.evaluate(l);
+    return `<div class="cand ${i === curFrom ? 'sel' : ''}" data-i="${i}">
+      <div class="mark" data-act="play" title="試聽">${markSVG(l, { color: brand.color })}<span class="score">${ev.score}</span></div>
+      <div class="info"><div class="nm">${String.fromCharCode(65 + i)}・${esc(l.name)}</div><div class="tags">${tagHTML(l)}</div>
+        <div class="note" style="margin-top:4px">${l.notes.map(n => E.solfa(E.noteMidi(l, n), l.keyIdx)).join(' ')}</div></div>
+      <div class="acts"><button type="button" data-act="play">▶ 試聽</button><button type="button" data-act="fav">♡ 收藏</button><button type="button" data-act="pick" class="primary">選這個 →</button></div>
+    </div>`;
+  }).join('');
+}
+function flashPlaying(el, sec) { el.classList.remove('playing'); void el.offsetWidth; el.style.setProperty('--dur', sec + 's'); el.classList.add('playing'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('playing'), sec * 1000 + 50); }
+function playCand(i) { const el = $('cands').querySelector(`[data-i="${i}"]`); play(cands[i], 'std', d => el && flashPlaying(el, d)); }
+$('cands').addEventListener('click', e => {
+  const act = e.target.closest('[data-act]'); if (!act) return;
+  const i = +e.target.closest('.cand').dataset.i;
+  if (act.dataset.act === 'play') playCand(i);
+  if (act.dataset.act === 'fav') saveMine(cands[i]);
+  if (act.dataset.act === 'pick') { curFrom = i; openEditor(JSON.parse(JSON.stringify(cands[i]))); renderCands(); $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+});
+
+/* ======================= 3 編輯 ======================= */
+const instSel = $('e-inst'), keySel = $('e-key'), scSel = $('e-scale');
+Object.entries(E.INSTRUMENTS).forEach(([k, v]) => instSel.add(new Option(v.label, k)));
+E.KEYS.forEach((k, i) => keySel.add(new Option(k + ' 調', i)));
+Object.entries(E.SCALES).forEach(([k, v]) => scSel.add(new Option(v.label, k)));
+const DURS = [[0.25, '短（1/16）'], [0.33, '三連音'], [0.5, '中（1/8）'], [0.75, '附點'], [1, '長（1/4）'], [1.5, '更長'], [2, '很長'], [3, '最長']];
+function pushUndo() { undoStack.push(JSON.stringify(cur)); if (undoStack.length > 40) undoStack.shift(); $('undo-btn').disabled = false; }
+function openEditor(l) { cur = l; undoStack = []; $('undo-btn').disabled = true; ['step3', 'step4', 'step5'].forEach(id => { $(id).hidden = false; }); renderEditor(); }
+function renderEditor() {
+  $('ed-title').textContent = cur.name;
+  $('roll-svg').outerHTML = markSVG(cur, { color: brand.color, grid: true, labels: true }).replace('<svg ', '<svg id="roll-svg" ');
+  const nd = cur.notes.map((n, i) => {
+    const m = E.noteMidi(cur, n);
+    const dv = DURS.reduce((b, d) => Math.abs(d[0] - n.dur) < Math.abs(b[0] - n.dur) ? d : b, DURS[0])[0];
+    return `<div class="nchip" data-i="${i}"><div class="nn">${i + 1}・${E.midiName(m)}</div><div class="sol">${E.solfa(m, cur.keyIdx)}</div>
+      <div class="ud"><button type="button" data-a="up" title="升高一級">▲</button><button type="button" data-a="dn" title="降低一級">▼</button></div>
+      <select data-a="dur" aria-label="第${i + 1}音長度">${DURS.map(d => `<option value="${d[0]}" ${d[0] === dv ? 'selected' : ''}>${d[1]}</option>`).join('')}</select>
+      <div class="ud"><button type="button" data-a="play" title="聽這個音">♪</button><button type="button" data-a="del" title="刪除" ${cur.notes.length <= 2 ? 'disabled' : ''}>✕</button></div></div>`;
+  }).join('');
+  $('notes').innerHTML = nd + (cur.notes.length < 8 ? '<button type="button" class="nchip add" id="add-note">＋<br>加一音</button>' : '');
+  instSel.value = cur.inst; keySel.value = cur.keyIdx; scSel.value = cur.scale;
+  $('e-bpm').value = cur.bpm; $('e-bpm-v').textContent = cur.bpm + ' BPM';
+  $('e-rev').value = cur.reverb; $('e-rev-v').textContent = Math.round(cur.reverb * 100) + '%';
+  $('e-chord').checked = !!cur.chord; $('e-bass').checked = !!cur.bass;
+  const ev = E.evaluate(cur);
+  $('ev-score').textContent = ev.score;
+  $('ev-tips').innerHTML = ev.tips.sort((a, b) => a.ok - b.ok).map(t => `<li class="${t.ok ? 'ok' : 'no'}">${esc(t.t)}</li>`).join('');
+  $('ex-list').innerHTML = E.explain(cur, brand).map(l => `<li>${esc(l)}</li>`).join('');
+  renderScenes(); renderMD();
+}
+function edit(fn) { pushUndo(); fn(); cur.name = cur.name.replace(/（已調整）$/, '') + '（已調整）'; renderEditor(); }
+$('notes').addEventListener('click', e => {
+  if (e.target.closest('#add-note')) { edit(() => { const last = cur.notes[cur.notes.length - 1]; const prev = cur.notes[cur.notes.length - 2] || last; cur.notes.splice(cur.notes.length - 1, 0, { deg: prev.deg + 1, dur: 0.5, vel: 0.8 }); void last; }); return; }
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const i = +b.closest('.nchip').dataset.i;
+  if (b.dataset.a === 'up') edit(() => { cur.notes[i].deg++; });
+  if (b.dataset.a === 'dn') edit(() => { cur.notes[i].deg--; });
+  if (b.dataset.a === 'del') edit(() => { cur.notes.splice(i, 1); });
+  if (b.dataset.a === 'play') { const one = { ...cur, chord: false, bass: false, notes: [{ ...cur.notes[i], dur: 1 }] }; play(one); }
+});
+$('notes').addEventListener('change', e => { if (e.target.dataset.a === 'dur') { const i = +e.target.closest('.nchip').dataset.i; edit(() => { cur.notes[i].dur = +e.target.value; }); } });
+instSel.addEventListener('change', () => edit(() => { cur.inst = instSel.value; }));
+keySel.addEventListener('change', () => edit(() => { const k = +keySel.value; let d = k - cur.keyIdx; if (d > 6) d -= 12; if (d < -6) d += 12; cur.root += d; cur.keyIdx = k; }));
+scSel.addEventListener('change', () => edit(() => {
+  const from = cur.scale, to = scSel.value;
+  // 保留每個音大約的位置：先換算成半音，再找新音階裡最接近的級數
+  cur.notes.forEach(n => { const s = E.degToSemi(n.deg, from); let best = 0, bd = 99; for (let d = -10; d <= 20; d++) { const x = Math.abs(E.degToSemi(d, to) - s); if (x < bd) { bd = x; best = d; } } n.deg = best; });
+  cur.scale = to;
+}));
+$('e-bpm').addEventListener('input', () => { $('e-bpm-v').textContent = $('e-bpm').value + ' BPM'; });
+$('e-bpm').addEventListener('change', () => edit(() => { cur.bpm = +$('e-bpm').value; }));
+$('e-rev').addEventListener('input', () => { $('e-rev-v').textContent = Math.round($('e-rev').value * 100) + '%'; });
+$('e-rev').addEventListener('change', () => edit(() => { cur.reverb = +$('e-rev').value; }));
+$('e-chord').addEventListener('change', () => edit(() => { cur.chord = $('e-chord').checked; }));
+$('e-bass').addEventListener('change', () => edit(() => { cur.bass = $('e-bass').checked; }));
+$('e-oct-u').addEventListener('click', () => { if (Math.max(...cur.notes.map(n => E.noteMidi(cur, n))) + 12 > 100) return toast('已經很高了'); edit(() => { cur.root += 12; }); });
+$('e-oct-d').addEventListener('click', () => { if (Math.min(...cur.notes.map(n => E.noteMidi(cur, n))) - 12 < 40) return toast('已經很低了'); edit(() => { cur.root -= 12; }); });
+$('e-rev-mel').addEventListener('click', () => edit(() => { const durs = cur.notes.map(n => n.dur); const degs = cur.notes.map(n => n.deg).reverse(); cur.notes.forEach((n, i) => { n.deg = degs[i]; n.dur = durs[i]; }); }));
+$('undo-btn').addEventListener('click', () => { if (!undoStack.length) return; cur = JSON.parse(undoStack.pop()); $('undo-btn').disabled = !undoStack.length; renderEditor(); });
+document.querySelectorAll('[data-play]').forEach(b => b.addEventListener('click', () => {
+  const v = b.dataset.play;
+  play(cur, v, d => {
+    const roll = $('roll');
+    if (v === 'std') flashPlaying(roll, d); else roll.classList.remove('playing');
+  });
+}));
+$('save-btn').addEventListener('click', () => saveMine(cur));
+
+/* ======================= 4 情境 ======================= */
+function renderScenes() {
+  const nm = brand.name || '你的品牌';
+  document.querySelectorAll('.scene').forEach(s => s.style.setProperty('--bc', brand.color));
+  $('sc-icon').textContent = [...nm][0];
+  $('sc-intro-t').textContent = nm; $('sc-sign').textContent = nm; $('sc-end-n').textContent = nm; $('sc-end-s').textContent = brand.slogan || '';
+  const { events } = E.toEvents(cur, 'std');
+  const lead = events.filter(e => e.part === 'lead');
+  const ms = lead.map(e => e.midi), lo = Math.min(...ms), hi = Math.max(...ms);
+  $('sc-bars').innerHTML = lead.map(e => `<i style="--h:${30 + ((e.midi - lo) / Math.max(1, hi - lo)) * 70}%;animation-delay:${e.t.toFixed(2)}s"></i>`).join('');
+}
+function playScene(sc) {
+  const v = sc.dataset.v;
+  play(cur, v, (d, total) => {
+    if (!SET.anim) return;
+    document.querySelectorAll('.scene').forEach(x => x.classList.remove('on'));
+    void sc.offsetWidth; sc.classList.add('on');
+    clearTimeout(sc._t); sc._t = setTimeout(() => sc.classList.remove('on'), (total + 1) * 1000);
+  });
+}
+document.querySelectorAll('.scene').forEach(sc => {
+  sc.addEventListener('click', () => playScene(sc));
+  sc.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playScene(sc); } });
+});
+
+/* ======================= 5 匯出 ======================= */
+const VNAME = { short: '短版', std: '標準版', long: '加長版' };
+const fileBase = () => (brand.name || '品牌').replace(/[\\/:*?"<>|#\s]+/g, '_') + '_聲音Logo';
+function download(bytes, name, type) {
+  const url = URL.createObjectURL(new Blob([bytes], { type }));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+document.querySelectorAll('[data-wav]').forEach(b => b.addEventListener('click', async () => {
+  const v = b.dataset.wav; b.disabled = true;
+  try {
+    const r = await render(cur, v, +SET.sr, +SET.ch);
+    download(E.encodeWAV(r.chans, r.sr), `${fileBase()}_${VNAME[v]}.wav`, 'audio/wav');
+    toast(`已下載 ${VNAME[v]} WAV（${r.total.toFixed(1)} 秒）`);
+  } catch (e) { toast('匯出失敗：' + e.message); }
+  b.disabled = false;
+}));
+document.querySelectorAll('[data-mid]').forEach(b => b.addEventListener('click', () => {
+  download(E.encodeMIDI(cur, b.dataset.mid), `${fileBase()}_${VNAME[b.dataset.mid]}.mid`, 'audio/midi'); toast('已下載 MIDI');
+}));
+function renderMD() { $('md-text').value = E.guideMarkdown(cur, brand, E.evaluate(cur)); }
+async function copyText(t, okMsg) {
+  try { await navigator.clipboard.writeText(t); toast(okMsg); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(okMsg); } catch (x) { toast('無法複製，請手動選取'); } ta.remove(); }
+}
+$('md-copy').addEventListener('click', () => copyText($('md-text').value, '已複製說明書'));
+$('md-dl').addEventListener('click', () => download(new TextEncoder().encode($('md-text').value), `${(brand.name || '品牌').replace(/[\\/:*?"<>|#\s]+/g, '_')}_聲音品牌說明書.md`, 'text/markdown'));
+$('md-print').addEventListener('click', () => {
+  const w = window.open('', '_blank'); if (!w) return toast('瀏覽器擋住了新視窗');
+  const md = $('md-text').value;
+  const html = md.split('\n').map(l => l.startsWith('# ') ? `<h1>${esc(l.slice(2))}</h1>` : l.startsWith('## ') ? `<h2>${esc(l.slice(3))}</h2>` : l.startsWith('- ') ? `<li>${esc(l.slice(2)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</li>` : l ? `<p>${esc(l)}</p>` : '').join('');
+  w.document.write(`<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${esc(brand.name || '品牌')} 聲音品牌說明書</title><style>body{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;max-width:720px;margin:24px auto;padding:0 16px;line-height:1.8;color:#1b1a17}h1{border-bottom:3px solid #1b1a17}h2{color:#b93118;margin-top:22px}li{margin-left:1.2em}.mk{background:#1b1a17;height:110px;margin:12px 0}.mk svg{width:100%;height:100%}</style></head><body><div class="mk">${markSVG(cur, { color: brand.color, labels: true })}</div>${html}<script>setTimeout(function(){print()},300)<\/script></body></html>`);
+  w.document.close();
+});
+$('share-btn').addEventListener('click', () => {
+  const { tones, ...b } = brand;
+  const url = location.href.split('#')[0] + '#s=' + E.encodeShare({ b: { ...b, tones }, l: cur });
+  copyText(url, '已複製分享連結');
+});
+
+/* ======================= 我的聲音 Logo ======================= */
+const MINE_KEY = 'sls-mine';
+const loadMine = () => { try { const a = JSON.parse(lsGet(MINE_KEY, '[]')); return Array.isArray(a) ? a.filter(x => E.validLogo(x.l)) : []; } catch (e) { return []; } };
+function saveMine(l) {
+  const a = loadMine();
+  const key = JSON.stringify([l.notes, l.inst, l.bpm, l.root, l.scale]);
+  if (a.some(x => JSON.stringify([x.l.notes, x.l.inst, x.l.bpm, x.l.root, x.l.scale]) === key)) return toast('這個已經收藏過了');
+  a.unshift({ id: Date.now().toString(36), at: new Date().toISOString().slice(0, 10), brand: brand.name || '未命名', color: brand.color, b: { ...brand }, l: JSON.parse(JSON.stringify(l)) });
+  lsSet(MINE_KEY, JSON.stringify(a.slice(0, 60))); renderMine(); toast('已存到我的聲音 Logo');
+}
+function renderMine() {
+  const a = loadMine();
+  $('mine').innerHTML = a.length ? a.map(x => `<div class="mi" data-id="${x.id}"><div class="sw" data-a="play" title="試聽">${markSVG(x.l, { color: x.color })}</div>
+    <div class="tx"><b>${esc(x.brand)}・${esc(x.l.name)}</b><span class="note">${x.at}・${E.INSTRUMENTS[x.l.inst].label}・${x.l.bpm} BPM</span>
+    <div class="bt"><button type="button" data-a="play">▶</button><button type="button" data-a="open">編輯</button><button type="button" data-a="del">刪除</button></div></div></div>`).join('')
+    : '<div class="empty">還沒有收藏。在候選或編輯區按「♡」就會存在這裡，方便之後比較。</div>';
+}
+$('mine').addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const id = b.closest('.mi').dataset.id, a = loadMine(), x = a.find(y => y.id === id); if (!x) return;
+  if (b.dataset.a === 'play') play(x.l);
+  if (b.dataset.a === 'open') { brand = Object.assign(E.defaultBrand(), x.b); fillBrand(); curFrom = -1; openEditor(JSON.parse(JSON.stringify(x.l))); $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  if (b.dataset.a === 'del') {
+    if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = '確定刪除？'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = '刪除'; }, 2500); return; }
+    lsSet(MINE_KEY, JSON.stringify(a.filter(y => y.id !== id))); renderMine();
+  }
+});
+
+/* ======================= 常用設定 ======================= */
+const OPEN_KEY = 'sls-set-open';
+function setSummaries() {
+  $('sv-play').textContent = `音量 ${Math.round(SET.vol * 100)}%・動畫${SET.anim ? '開' : '關'}`;
+  $('sv-export').textContent = `${SET.sr / 1000} kHz・${+SET.ch === 2 ? '立體聲' : '單聲道'}${SET.norm ? '・正規化' : ''}`;
+  $('sv-data').textContent = `收藏 ${loadMine().length} 個`;
+}
+function openSettings() {
+  $('set-vol').value = SET.vol; $('set-vol-v').textContent = Math.round(SET.vol * 100) + '%';
+  $('set-anim').checked = !!SET.anim; $('set-autoplay').checked = !!SET.autoplay; $('set-sr').value = String(SET.sr); $('set-ch').value = String(SET.ch); $('set-norm').checked = !!SET.norm;
+  let open = []; try { open = JSON.parse(lsGet(OPEN_KEY, '[]')); } catch (e) {}
+  document.querySelectorAll('details.set-sec').forEach(d => { d.open = open.includes(d.dataset.sec); });
+  setSummaries(); $('settings-modal').classList.remove('hidden');
+}
+function rememberOpen() { lsSet(OPEN_KEY, JSON.stringify([...document.querySelectorAll('details.set-sec')].filter(d => d.open).map(d => d.dataset.sec))); }
+document.querySelectorAll('details.set-sec').forEach(d => d.addEventListener('toggle', rememberOpen));
+$('set-expand').addEventListener('click', () => { document.querySelectorAll('details.set-sec').forEach(d => { d.open = true; }); rememberOpen(); });
+$('set-collapse').addEventListener('click', () => { document.querySelectorAll('details.set-sec').forEach(d => { d.open = false; }); rememberOpen(); });
+$('set-vol').addEventListener('input', e => { $('set-vol-v').textContent = Math.round(e.target.value * 100) + '%'; });
+$('settings-btn').addEventListener('click', openSettings);
+$('settings-ok').addEventListener('click', () => {
+  SET.vol = +$('set-vol').value; SET.anim = $('set-anim').checked; SET.autoplay = $('set-autoplay').checked;
+  SET.sr = +$('set-sr').value; SET.ch = +$('set-ch').value; SET.norm = $('set-norm').checked;
+  saveSet(); renderCache.clear(); $('settings-modal').classList.add('hidden');
+});
+function confirmBtn(btn, label, fn) {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.c !== '1') { btn.dataset.c = '1'; btn.textContent = '再按一次確認'; setTimeout(() => { btn.dataset.c = ''; btn.textContent = label; }, 2500); return; }
+    btn.dataset.c = ''; fn(); btn.textContent = '✅ 已清除'; setTimeout(() => { btn.textContent = label; }, 1500); setSummaries();
+  });
+}
+confirmBtn($('clear-mine'), '清除「我的聲音 Logo」全部紀錄', () => { lsDel(MINE_KEY); renderMine(); });
+confirmBtn($('clear-brand'), '清除上次填的品牌資料', () => { lsDel('sls-brand'); brand = Object.assign(E.defaultBrand(), { slogan: '', color: '#e2432a' }); fillBrand(); });
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m && m.id !== 'warn-modal') m.classList.add('hidden'); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('settings-modal').classList.add('hidden'); });
+
+/* 使用警語：首次造訪自動跳出 */
+const showWarn = () => $('warn-modal').classList.remove('hidden');
+if (!lsGet('sls-warned', '')) showWarn();
+$('warn-ok').addEventListener('click', () => { lsSet('sls-warned', '1'); $('warn-modal').classList.add('hidden'); });
+$('warn-btn').addEventListener('click', showWarn);
+$('about-warn').addEventListener('click', () => { $('settings-modal').classList.add('hidden'); showWarn(); });
+$('about-install').addEventListener('click', () => $('installBtn').click());
+
+/* ======================= 啟動 ======================= */
+fillBrand(); renderMine();
+const m = location.hash.match(/#s=([A-Za-z0-9_-]+)/);
+if (m) {
+  const d = E.decodeShare(m[1]);
+  if (d && E.validLogo(d.l)) {
+    brand = Object.assign(E.defaultBrand(), { slogan: '', color: '#e2432a' }, d.b || {});
+    brand.name = String(brand.name || '').slice(0, 20); brand.slogan = String(brand.slogan || '').slice(0, 24);
+    if (!/^#[0-9a-f]{6}$/i.test(brand.color)) brand.color = '#e2432a';
+    fillBrand(); openEditor(d.l); toast('已載入分享的聲音 Logo，按 ▶ 試聽');
+  } else toast('分享連結無法讀取');
+}
+window.__sls = { E, get cur() { return cur; }, get cands() { return cands; }, render, markSVG, SET, brand: () => brand };
+</script>
+
+<script>
+/* 頂部跑馬燈 — 共用公告（必備，不提供關閉） */
+(function () {
+  'use strict';
+  var MARQUEE_CHECK_URL = "https://script.google.com/macros/s/AKfycbwKX0DNNbY8y4nf90BFTHtxgfqJcHHcZasRrgycl4QAe52_hkjMWSkYk4xOsqU-JPCROw/exec";
+  var STORAGE_KEY = 'slsMarquee';
+  var REFRESH_MS = 20 * 60 * 1000;
+  var bar = document.getElementById('marqueeBar');
+  var track = document.getElementById('marqueeTrack');
+  var lastKey = null;
+  function loadCache() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) { return []; } }
+  function saveCache(items) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) {} }
+  function appendParsedText(container, text) {
+    var re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    var lastIndex = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > lastIndex) container.appendChild(document.createTextNode(text.slice(lastIndex, m.index)));
+      var a = document.createElement('a');
+      a.href = m[2]; a.textContent = m[1]; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.style.color = 'inherit'; a.style.textDecoration = 'underline';
+      container.appendChild(a);
+      lastIndex = re.lastIndex;
+    }
+    if (lastIndex < text.length) container.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+  function buildTrackContent(items) {
+    var frag = document.createDocumentFragment();
+    function appendPass() {
+      items.forEach(function (item, idx) {
+        if (idx > 0) frag.appendChild(document.createTextNode('　★　'));
+        appendParsedText(frag, item);
+      });
+    }
+    appendPass(); frag.appendChild(document.createTextNode('　★　')); appendPass();
+    return frag;
+  }
+  function render(items) {
+    if (!items || !items.length) return;
+    var key = JSON.stringify(items);
+    if (key === lastKey) return;
+    lastKey = key;
+    track.innerHTML = '';
+    track.appendChild(buildTrackContent(items));
+    bar.classList.add('on');
+    document.body.classList.add('has-marquee');
+    var width = track.scrollWidth / 2;
+    track.style.animationDuration = Math.max(width / 80, 10) + 's';
+  }
+  function fetchMarquee() {
+    fetch(MARQUEE_CHECK_URL, { method: 'POST', body: JSON.stringify({ serial: '' }) })
+      .then(function (r) { return r.json(); })
+      .then(function (data) { if (data && Array.isArray(data.marquee) && data.marquee.length) { saveCache(data.marquee); render(data.marquee); } })
+      .catch(function () {});
+  }
+  render(loadCache());
+  fetchMarquee();
+  setInterval(fetchMarquee, REFRESH_MS);
+})();
+</script>
+<script>
+/* PWA 加入主畫面 */
+(function () {
+  'use strict';
+  var deferredPrompt = null;
+  var btn = document.getElementById('installBtn');
+  var ua = navigator.userAgent || '';
+  var isIOSDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isMacDesktop = /Macintosh/.test(ua) && !isIOSDevice;
+  var isSafariEngine = /^((?!chrome|crios|fxios|edgios|android).)*safari/i.test(ua);
+  var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  function fallbackMessage() {
+    if (isIOSDevice) return '請點畫面上的「分享」圖示，選「加入主畫面」';
+    if (isMacDesktop && isSafariEngine) return '請用選單列「檔案」→「加入 Dock」（Safari 17 以上）';
+    return '瀏覽器不支援，或已安裝過';
+  }
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredPrompt = e; });
+  window.addEventListener('appinstalled', function () { deferredPrompt = null; });
+  if (btn) {
+    if (isStandalone) { btn.style.display = 'none'; }
+    else {
+      btn.addEventListener('click', function () {
+        if (!deferredPrompt) { window.alert(fallbackMessage()); return; }
+        try { deferredPrompt.prompt(); deferredPrompt.userChoice.then(function () { deferredPrompt = null; }); }
+        catch (err) { window.alert(fallbackMessage()); }
+      });
+    }
+  }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js').catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>

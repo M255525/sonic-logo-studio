@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>品牌聲音 Logo 產生器 操作手冊</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+  :root { --paper: #f3eee4; --card: #fbf8f2; --ink: #1b1a17; --ink2: #55514a; --red: #e2432a; --teal: #1d6b66; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; line-height: 1.85; }
+  main { max-width: 820px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: clamp(24px, 5.5vw, 34px); margin: 0 0 4px; border-bottom: 3px solid var(--ink); padding-bottom: 6px; }
+  h2 { font-size: 19px; margin: 28px 0 8px; display: flex; gap: 8px; align-items: center; }
+  h2::before { content: ''; width: 14px; height: 14px; background: var(--red); flex: none; }
+  h3 { color: var(--teal); font-size: 16px; margin: 14px 0 4px; }
+  section { background: var(--card); border: 2px solid var(--ink); padding: 4px 18px 12px; }
+  .muted { color: var(--ink2); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { border-bottom: 1px solid #d6cdbb; padding: 7px 6px; text-align: left; vertical-align: top; }
+  .table-wrap { overflow-x: auto; }
+  a { color: var(--red); }
+  .warn { background: #fff4ef; border-color: var(--red); }
+</style>
+</head>
+<body>
+<main>
+  <h1>品牌聲音 Logo 產生器 操作手冊</h1>
+  <p class="muted">像 Logo 圖案一樣，品牌也可以有一段「一聽就認得」的招牌聲音。本工具幫你從品牌名稱與個性，排出 3～5 個音的聲音 Logo 草稿。<a href="index.html">← 回到工具</a></p>
+
+  <h2>使用警語</h2>
+  <section class="warn">
+    <ul>
+      <li>本工具僅供品牌聲音發想、教學示範與個人練習使用，工具本身禁止未經授權公開發布、販售或商業化使用。</li>
+      <li>旋律由規則式組合產生，<b>不保證與既有商標聲音、廣告歌或歌曲不相似</b>。把產生的聲音正式用於商業或申請聲音商標前，請先到經濟部智慧財產局商標檢索系統查詢，並請專業人士確認；本工具不負擔任何侵權責任。</li>
+      <li>「辨識度健檢」是本工具自訂的規則評分（音數、跳躍音程、轉折、音域、節奏變化、結尾、長度），僅供參考，不代表消費者或市場測試結果。</li>
+      <li>所有聲音都在你的瀏覽器裡用 Web Audio 程式即時合成，不使用任何音檔素材，品牌資料不會上傳；收藏只存在這台裝置的瀏覽器。</li>
+      <li>試聽前請先把音量調小一點，戴耳機時尤其注意。</li>
+    </ul>
+  </section>
+
+  <h2>什麼是聲音 Logo</h2>
+  <section>
+    <p>聲音 Logo（sonic logo、音韻商標）是品牌在影片片尾、App 開啟、門市提示、電話等候時固定出現的一小段聲音，通常只有 <b>1～3 秒、3～5 個音</b>。重點不是好不好聽，而是<b>每次都一樣</b>：同一段旋律在每個接觸點反覆出現，顧客才會在還沒看到畫面時就認出你。</p>
+  </section>
+
+  <h2>操作步驟</h2>
+  <section>
+    <h3>01 品牌資料</h3>
+    <ul>
+      <li><b>品牌名稱</b>：中文一字一音、英文依音節估算；音符數選「依名稱」時，3～6 個字的名稱就用同樣多的音。</li>
+      <li><b>產業</b>：選了會自動帶入四個個性滑桿，之後可以再調。</li>
+      <li><b>個性四軸</b>：活潑↔穩重（影響速度與音域）、親民↔高級（影響樂器與殘響）、自然↔科技（影響音階與音色）、溫暖↔酷感（影響調式與低音）。</li>
+      <li><b>跟著聲調走</b>：勾選後幫每個字選國語聲調，第一個候選的旋律高低會跟著聲調走，聽起來像在唱店名。工具不會自動判斷讀音，破音字請自己選。</li>
+      <li>同樣的名稱與設定一定得到同樣的 6 個候選；想要別的請按「換一批」。</li>
+    </ul>
+    <h3>02 挑一個喜歡的</h3>
+    <p>點黑色色塊或「▶ 試聽」。色塊是這段聲音的「聲紋」：橫向是時間、高低是音高，最後一個音用品牌色標示。右上角數字是辨識度健檢分數。</p>
+    <h3>03 微調</h3>
+    <ul>
+      <li>每個音可以 ▲▼ 升降一級（在目前的音階裡移動）、改長度、單獨試聽、刪除；最多 8 個音。</li>
+      <li>可換樂器（鐘聲、木琴、電鋼琴、撥弦、合成器、八位元、柔和鋪底、口哨、水滴）、調性、音階、速度、殘響，整段升降八度或前後顛倒。</li>
+      <li>右側「辨識度健檢」會即時告訴你哪裡可以更好記；「為什麼這樣配」說明音階、樂器、結構傳達的感覺。</li>
+      <li>改錯了按「↶ 還原」。</li>
+    </ul>
+    <h3>04 情境試聽</h3>
+    <p>四個情境各播放對應版本：App 開啟／通知（短版）、短影音片頭（標準版）、門市自動門／結帳（標準版）、廣告結尾（加長版，會顯示品牌名稱與標語）。</p>
+    <h3>05 帶走</h3>
+    <div class="table-wrap"><table>
+      <tr><th>格式</th><th>用途</th></tr>
+      <tr><td>WAV 短版／標準版／加長版</td><td>影片剪輯、簡報、App、LINE 官方帳號素材。取樣率、聲道、音量正規化可在 ⚙ 常用設定改。</td></tr>
+      <tr><td>MIDI</td><td>交給配樂師，或用 GarageBand、FL Studio 等軟體換成真樂器重新編曲。主旋律在第 1 軌頻道、和弦第 2、低音第 3。</td></tr>
+      <tr><td>分享連結</td><td>聲音的所有設定都編在網址裡，對方打開即可播放與修改，不經過任何伺服器。</td></tr>
+      <tr><td>聲音品牌說明書</td><td>音符、速度、樂器、三個版本的使用規範與注意事項，可複製、下載 .md 或列印／存 PDF。</td></tr>
+    </table></div>
+  </section>
+
+  <h2>做出好記聲音 Logo 的小訣竅</h2>
+  <section>
+    <ul>
+      <li><b>3～5 個音最剛好</b>，超過 6 個就變成一段歌。</li>
+      <li><b>至少一個跳躍</b>（例如 Do→Sol），記憶點通常就在那裡；一路 Do Re Mi 走上去最沒特色。</li>
+      <li><b>結尾決定感覺</b>：回到 Do 是「說完了、可以放心」；停在 Sol 或 Re 是「還沒說完、期待下一步」，適合 App 開啟。</li>
+      <li><b>一個八度內</b>，一般人哼得出來才會口耳相傳。</li>
+      <li><b>只換樂器、不換旋律</b>：節慶版可以改木琴或鐘聲，但音符和節奏維持不變，辨識度才會累積。</li>
+    </ul>
+  </section>
+
+  <h2>常用設定（⚙）</h2>
+  <section>
+    <ul>
+      <li>播放：試聽音量、情境動畫、產生後自動播放第一個。</li>
+      <li>匯出：WAV 取樣率（44.1／48 kHz）、立體聲／單聲道、音量正規化到 -1 dBFS。</li>
+      <li>資料：清除收藏、清除上次填的品牌資料（兩者都要按兩次確認）。</li>
+    </ul>
+  </section>
+
+  <h2 id="creator-h">創作者</h2>
+  <section id="creator">
+<div class="mk-creator">
+<style>.mk-creator{line-height:1.75}.mk-creator h3{margin:14px 0 6px;font-size:1.05em}.mk-creator table{width:100%;border-collapse:collapse;font-size:.95em}.mk-creator td,.mk-creator th{text-align:left;padding:5px 6px;border-bottom:1px solid rgba(128,128,128,.3);vertical-align:top}.mk-creator th{white-space:nowrap}.mk-creator ul{margin:4px 0;padding-left:1.4em}.mk-creator .mk-tags{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}.mk-creator .mk-tags span{border:1px solid rgba(128,128,128,.45);border-radius:999px;padding:1px 10px;font-size:.9em}</style>
+<p><b>Mark Tsai（蔡豐全）</b>為深耕創業輔導與數位轉型領域的顧問與講師，長期擔任勞動力發展署創業顧問與多項政府計畫的顧問、業師與評審委員，協助中小企業導入數據分析與 AI 工具、申請政府補助計畫，並具備跨境電商實務與講師培訓的豐富經驗。本工具是其推廣 AI 工具運用於教學與課程情境的作品之一。</p>
+<p>聯絡信箱：<a href="mailto:tsaimark@gmail.com">tsaimark@gmail.com</a></p>
+<h3>專長</h3>
+<div class="mk-tags"><span>銷售數據分析</span><span>AI 工具運用</span><span>政府補助計畫申請</span><span>創業</span><span>跨境電商</span></div>
+<h3>證照</h3>
+<table>
+<thead><tr><th>年度</th><th>證照</th></tr></thead>
+<tbody>
+<tr><td>2013</td><td>青創總會 創業輔導顧問師班</td></tr>
+<tr><td>2014</td><td>青創總會 網路行銷講師培訓班</td></tr>
+<tr><td>2016</td><td>阿里巴巴 P4P 認證講師</td></tr>
+<tr><td>2017</td><td>iCap 訓練規劃與評量職能基準課程</td></tr>
+<tr><td>2023</td><td>iCap 職能導向課程申請認證實作班</td></tr>
+<tr><td>2025</td><td>iPAS AI 應用規劃師－初級</td></tr>
+<tr><td>2025</td><td>新北市社會局 社區數位陪伴員</td></tr>
+</tbody>
+</table>
+<h3>經歷</h3>
+<ul>
+<li>勞動力發展署桃竹苗分署 創業顧問（2017－迄今）</li>
+<li>勞動力發展署（北北基）小型企業人力提升計畫 顧問（2019－迄今）</li>
+<li>勞動力發展署（桃竹苗）小型企業人力提升計畫 顧問（2019－迄今）</li>
+<li>農業部農業科技司「科技農企業雙軸轉型躍升發展」科技計畫 業師（2025－2026）</li>
+<li>勞動力發展署 企業人力資源提升計畫 審查委員（2024）</li>
+<li>勞動力發展署 職前訓練評鑑計畫 委員（2022）</li>
+<li>勞動部桃竹苗分署 桃竹苗區域運籌人力資源整合服務計畫 顧問（2022－2023）</li>
+<li>經濟部中小企業處 SBIR 海選專案 評審委員（2019－2024）</li>
+<li>勞動力發展署 數位學習課程清單審查會議 審查委員（2024－2025）</li>
+<li>輔仁大學創新跨領域學院 課務委員（2024－2025）</li>
+<li>台北市進出口商業同業公會 跨境電商生態村 顧問</li>
+<li>台灣網商協會 顧問</li>
+<li>中華職能開發策進會 顧問（2018－2020）</li>
+<li>新北市汽車美容人員職業工會 顧問（2023－迄今）</li>
+<li>中華網路行銷講師協會 顧問（2022－迄今）</li>
+<li>新北市社企電商基地 輔導顧問（2018－2020）</li>
+<li>阿里巴巴國際站平台 認證講師（2016）</li>
+<li>巨匠電腦 跨境電子商務班 講師（2016－2017）</li>
+</ul>
+</div>
+  </section>
+</main>
+</body>
+</html>
