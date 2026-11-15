@@ -1,6 +1,6 @@
 # sonic-logo-studio — 品牌聲音 Logo 產生器
 
-靜態網頁（`index.html`＋`engine.js`＋`manual.html`＋PWA 檔），無建置步驟、無外部 JS 函式庫（只用 Google Fonts：Noto Sans TC、Space Mono）。port 8882。2026-11-15 建立（使用者從「聲音相關工具發想」清單選了這個，功能細節都是我自定）。**尚未上線**：本機 git 已 commit，沒有遠端；上線前先問過使用者（建 public repo 需使用者自己 `gh repo create`），上線後 visitor-badge 已預埋 `m255525.soniclogostudio`，也可放進創作者小鎮。
+靜態網頁（`index.html`＋`engine.js`＋`manual.html`＋PWA 檔），無建置步驟、無外部 JS 函式庫（只用 Google Fonts：Noto Sans TC、Space Mono）。port 8882。2026-11-15 建立（使用者從「聲音相關工具發想」清單選了這個，功能細節都是我自定）。2026-11-15 上線：公開 repo <https://github.com/M255525/sonic-logo-studio>（使用者自己 `gh repo create`），GitHub Pages（Actions workflow，push 到 master 自動部署）<https://m255525.github.io/sonic-logo-studio/>。visitor-badge `m255525.soniclogostudio`。尚未放進創作者小鎮。
 
 視覺：品牌識別手冊風（米白方格紙 `#f3eee4`、墨黑 `#1b1a17`、朱紅 `#e2432a`、直角粗框），刻意和聲控大冒險的深藍遊戲風不同。
 
