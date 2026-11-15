@@ -183,6 +183,16 @@
   .examples button { font-size: 13px; padding: 3px 10px; border-width: 1px; }
   .examples button i { width: 10px; height: 10px; display: inline-block; background: var(--c); }
   .exnote { background: #fff4ef; border-left: 4px solid var(--red); padding: 8px 10px; font-size: 13.5px; margin-bottom: 14px; }
+  .aibox { background: #f1f6f5; border: 2px solid var(--teal); padding: 10px 12px; margin-bottom: 14px; }
+  .aibox textarea { min-height: 64px; resize: vertical; }
+  .aibox .lbl { font-weight: 900; font-size: 14px; color: var(--teal); }
+  .aiout { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--teal); padding: 8px 10px; font-size: 13.5px; margin-top: 8px; }
+  .aiout ul { margin: 4px 0 0; padding-left: 1.2em; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+  .chips button { font-size: 12.5px; padding: 2px 8px; border-width: 1px; font-weight: 500; }
+  button.ai { background: var(--teal); border-color: var(--teal); color: #fff; }
+  button.ai:hover { background: #134c48; border-color: #134c48; }
+  .busy { opacity: .6; pointer-events: none; }
   .modal { position: fixed; inset: 0; background: rgba(27, 26, 23, .6); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .modal.hidden { display: none; }
   .modal .box { background: var(--card); border: 3px solid var(--ink); max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
@@ -229,6 +239,16 @@
     <h2><span class="no">01</span>品牌資料<span class="hint">名稱字數會決定音符數（中文一字一音），個性決定音階、樂器和速度</span></h2>
     <div class="body">
       <div class="examples" id="examples"><span>📚 範例（虛構品牌，點了直接試聽）：</span></div>
+      <div class="aibox">
+        <label class="f"><span class="lbl">🤖 不懂音樂？用白話描述你的品牌，讓 AI 幫你設定</span>
+          <textarea id="ai-desc" maxlength="1500" placeholder="例如：我在台南開一家手工豆花店叫「阿嬤的豆花」，客人多是家庭和長輩，想要溫暖懷舊、讓人安心的感覺，聲音會放在 IG 短影音的片尾。"></textarea></label>
+        <div class="row-actions" style="margin-top:8px">
+          <button class="ai" id="ai-brand" type="button">✨ 幫我設定並產生</button>
+          <button id="ai-setup" type="button">🔑 AI 金鑰設定</button>
+          <span class="note" id="ai-status"></span>
+        </div>
+        <div class="aiout" id="ai-brand-out" hidden></div>
+      </div>
       <div class="form-grid">
         <label class="f">品牌名稱 <input type="text" id="b-name" maxlength="20" placeholder="例如：阿嬤的豆花、星光咖啡、Mark Coffee"></label>
         <label class="f">產業 <small>選了會自動帶入個性，之後還可以再調</small><select id="b-ind"></select></label>
@@ -256,7 +276,10 @@
   <!-- 2 候選 -->
   <section class="step" id="step2" hidden>
     <h2><span class="no">02</span>挑一個喜歡的<span class="hint">點黑色色塊試聽，右上角是辨識度健檢分數</span></h2>
-    <div class="body"><div class="cands" id="cands"></div></div>
+    <div class="body">
+      <div class="row-actions" style="margin:0 0 12px"><button class="ai" id="ai-pick" type="button">🤖 幫我挑一個最適合的</button><span class="note">會參考上面的品牌描述</span></div>
+      <div class="aiout" id="ai-pick-out" hidden style="margin:0 0 12px"></div>
+      <div class="cands" id="cands"></div></div>
   </section>
 
   <!-- 3 編輯 -->
@@ -285,6 +308,13 @@
             <button type="button" data-play="long">▶ 加長版</button>
             <button type="button" id="save-btn">♡ 存到我的聲音 Logo</button>
             <button type="button" id="undo-btn" disabled>↶ 還原</button>
+          </div>
+          <div class="aibox" style="margin:14px 0 0">
+            <label class="f"><span class="lbl">🤖 用白話說想怎麼改</span>
+              <input type="text" id="ai-adj" maxlength="200" placeholder="例如：再溫暖一點、短一點、結尾要讓人安心、更有科技感"></label>
+            <div class="chips" id="ai-chips"></div>
+            <div class="row-actions" style="margin-top:4px"><button class="ai" id="ai-adj-go" type="button">✨ 幫我改並試聽</button><span class="note">改完不滿意按「↶ 還原」</span></div>
+            <div class="aiout" id="ai-adj-out" hidden></div>
           </div>
         </div>
         <div class="side">
@@ -339,6 +369,7 @@
   <div class="warnbox">
     ⚠ <b>使用警語</b>：本工具僅供品牌聲音發想、教學示範與個人練習使用，工具本身禁止未經授權公開發布、販售或商業化使用。
     旋律由規則式組合產生，<b>不保證與既有商標聲音、廣告歌或歌曲不相似</b>；把產生的聲音正式用於商業或申請聲音商標前，請先查詢經濟部智慧財產局商標檢索系統，並請專業人士確認。辨識度分數是本工具自訂的規則，不代表市場測試結果。
+    AI 助理為選用功能，需自備金鑰（只存在本機瀏覽器）；使用時品牌描述會送到你選的 AI 服務商，AI 的建議可能不準確，請自己試聽判斷。
   </div>
   <footer>
     創作者：蔡豐全（Mark Tsai）｜<a href="manual.html#creator" target="_blank" rel="noopener">創作者介紹與聯絡方式</a><br>
@@ -353,6 +384,7 @@
       ・旋律由規則式組合產生，<b>不保證與既有商標聲音、廣告歌或歌曲不相似</b>。正式商用或申請聲音商標前，請先到經濟部智慧財產局商標檢索系統查詢，並請專業人士確認；本工具不負擔任何侵權責任。<br>
       ・辨識度健檢分數是本工具自訂的規則評分，僅供參考，不代表消費者或市場測試結果。<br>
       ・所有聲音都在你的瀏覽器裡用程式即時合成，<b>不用任何音檔素材，品牌資料也不會上傳</b>。<br>
+      ・🤖 AI 助理是選用功能，要自備 API 金鑰，<b>金鑰只存在這台裝置的瀏覽器</b>；使用時你輸入的品牌描述會送到你選的 AI 服務商，可能產生費用。AI 的建議不一定準確，請以自己的耳朵為準。<br>
       ・試聽前請先把音量調小一點，戴耳機時尤其注意。</div>
     <div style="font-size:12px;color:var(--ink2)">創作者：蔡豐全（Mark Tsai）</div>
     <button id="warn-ok" class="primary" type="button" style="justify-content:center;font-size:16px">我知道了</button>
@@ -363,6 +395,17 @@
   <div class="box">
     <h3 id="set-h">⚙ 常用設定</h3>
     <div class="set-tools"><button type="button" id="set-expand">全部展開</button><button type="button" id="set-collapse">全部收合</button></div>
+    <details class="set-sec" data-sec="ai"><summary><span class="t">🤖 AI 設定（自備金鑰）</span><span class="v" id="sv-ai"></span></summary>
+      <div class="set-body">
+        <div class="note">選一家 AI 服務商並填入你自己的 API 金鑰（Gemini 可到 Google AI Studio 免費申請）。<b>金鑰只存在這台裝置的瀏覽器</b>，不會上傳到本工具；使用 AI 時，你輸入的品牌描述與目前的聲音設定會送到你選的服務商。共用電腦用完請按「清除金鑰」。沒有金鑰也能用，會改用簡單的關鍵字規則。</div>
+        <label class="row">服務商 <select id="ai-provider"></select></label>
+        <label class="row">模型 <select id="ai-model"></select></label>
+        <label class="row">或自己填模型名稱 <input type="text" id="ai-model-custom" style="width:200px" placeholder="選填"></label>
+        <label class="row" id="ai-base-row">端點網址 <input type="text" id="ai-base" style="width:220px" placeholder="http://localhost:11434/v1"></label>
+        <label class="row">API 金鑰 <span style="display:flex;gap:4px"><input type="password" id="ai-key" autocomplete="off" style="width:200px"><button type="button" id="ai-eye" title="顯示／隱藏">👁</button></span></label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" id="ai-test">測試連線</button><button type="button" id="ai-clear">清除金鑰</button></div>
+        <div class="note" id="ai-test-msg"></div>
+      </div></details>
     <details class="set-sec" data-sec="play"><summary><span class="t">🔊 播放</span><span class="v" id="sv-play"></span></summary>
       <div class="set-body">
         <label class="row">試聽音量 <span style="display:flex;gap:8px;align-items:center;min-width:180px"><input type="range" id="set-vol" min="0.1" max="1" step="0.05"> <b id="set-vol-v"></b></span></label>
@@ -399,6 +442,7 @@
 <script type="module">
 import * as E from './engine.js';
 import { EXAMPLES } from './examples.js';
+import * as AI from './ai.js';
 const $ = id => document.getElementById(id);
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -822,19 +866,130 @@ $('mine').addEventListener('click', e => {
   }
 });
 
+/* ======================= AI 助理 ======================= */
+const AI_KEY = 'sls-ai';
+const aiCfg = () => { try { return AI.normCfg(JSON.parse(lsGet(AI_KEY, '{}'))); } catch (e) { return AI.normCfg({}); } };
+const aiOn = () => AI.aiReady(aiCfg());
+function aiStatusText() { $('ai-status').textContent = aiOn() ? '使用：' + AI.aiStatus(aiCfg()) : '尚未設定金鑰：先用免金鑰規則解析（比較陽春）'; }
+$('ai-desc').value = lsGet('sls-ai-desc', '');
+$('ai-desc').addEventListener('input', () => lsSet('sls-ai-desc', $('ai-desc').value));
+function busy(btn, on) { if (on) { btn.dataset.l = btn.textContent; btn.textContent = '⏳ AI 思考中…'; btn.classList.add('busy'); } else { btn.textContent = btn.dataset.l || btn.textContent; btn.classList.remove('busy'); } }
+async function askAI(prompt, btn) {
+  busy(btn, true);
+  try { return AI.parseJson(await AI.callLLM(aiCfg(), prompt, m => { btn.textContent = '⏳ ' + m; })); }
+  finally { busy(btn, false); }
+}
+function showOut(id, html) { $(id).innerHTML = html; $(id).hidden = false; }
+const AXV = v => ['-2', '-1', '0', '+1', '+2'][v + 2];
+
+// 1. 白話 → 品牌設定 → 產生候選
+$('ai-brand').addEventListener('click', async () => {
+  const text = $('ai-desc').value.trim();
+  if (text.length < 6) return toast('先用一兩句話描述你的品牌');
+  readBrand();
+  let r, src = 'ai', warn = '';
+  try { r = aiOn() ? AI.sanitizeBrand(await askAI(AI.brandPrompt(text, brand), $('ai-brand')), brand) : (src = 'rule', AI.ruleBrand(text, brand)); }
+  catch (e) { warn = `⚠ AI 呼叫失敗：${esc(e.message)}，先改用免金鑰規則解析。<br>`; r = AI.ruleBrand(text, brand); src = 'rule'; }
+  const { reason, ...set } = r;
+  Object.assign(brand, set); saveBrand(); fillBrand();
+  const lines = [];
+  if (set.name) lines.push('品牌名稱：' + esc(set.name));
+  if (set.industry) lines.push('產業：' + esc(E.INDUSTRIES[set.industry].label));
+  lines.push('個性：' + E.AXES.map(a => `${a.left}↔${a.right} ${AXV(brand[a.key])}`).join('、'));
+  if (set.notes != null) lines.push('音符數：' + (set.notes === 'auto' ? '依名稱' : set.notes + ' 個'));
+  if (set.length) lines.push('長度：' + { short: '短促', std: '標準', long: '餘韻長' }[set.length]);
+  if (set.slogan) lines.push('標語：' + esc(set.slogan));
+  showOut('ai-brand-out', warn + `<b>${src === 'ai' ? '🤖 AI 幫你設定好了' : '🔎 規則解析結果'}</b>（下方欄位已更新，可以再手動調整）<ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul>${reason ? '<div style="margin-top:4px">' + esc(reason) + '</div>' : ''}`);
+  batch = 0; genCands(); $('ai-pick-out').hidden = true;
+  $('step2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// 2. 幫我挑一個
+$('ai-pick').addEventListener('click', async () => {
+  if (!cands.length) return;
+  let r, src = 'ai';
+  try { r = aiOn() ? AI.sanitizePick(await askAI(AI.pickPrompt(cands, brand, $('ai-desc').value.trim()), $('ai-pick')), cands.length) : (src = 'rule', AI.rulePick(cands, brand)); }
+  catch (e) { r = AI.rulePick(cands, brand); src = 'rule'; r.reason = `⚠ AI 呼叫失敗（${e.message}），改用規則挑選。` + r.reason; }
+  const L = i => String.fromCharCode(65 + i);
+  showOut('ai-pick-out', `<b>${src === 'ai' ? '🤖 AI 推薦' : '🔎 規則推薦'}：${L(r.pick)}・${esc(cands[r.pick].name)}</b>${r.runnerUp >= 0 ? `　（第二名 ${L(r.runnerUp)}）` : ''}<div>${esc(r.reason)}</div>${r.tip ? `<div>💡 ${esc(r.tip)}</div>` : ''}
+    <div class="row-actions" style="margin-top:6px"><button type="button" data-pk="${r.pick}">▶ 聽聽看</button><button type="button" class="primary" data-pk-open="${r.pick}">選這個 →</button></div>`);
+  document.querySelectorAll('.cand').forEach(c => c.classList.toggle('sel', +c.dataset.i === r.pick));
+});
+$('ai-pick-out').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.pk) playCand(+b.dataset.pk);
+  if (b.dataset.pkOpen) { const i = +b.dataset.pkOpen; curFrom = i; openEditor(JSON.parse(JSON.stringify(cands[i]))); renderCands(); $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+});
+
+// 3. 白話調整
+const CHIPS = ['再溫暖一點', '更有科技感', '更高級', '短一點', '結尾要讓人安心', '更好記', '活潑一點', '沉穩一點'];
+$('ai-chips').innerHTML = CHIPS.map(c => `<button type="button">${c}</button>`).join('');
+$('ai-chips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('ai-adj').value = b.textContent; $('ai-adj-go').click(); } });
+$('ai-adj').addEventListener('keydown', e => { if (e.key === 'Enter') $('ai-adj-go').click(); });
+$('ai-adj-go').addEventListener('click', async () => {
+  const req = $('ai-adj').value.trim();
+  if (!req) return toast('先寫想怎麼改，或點上面的快速選項');
+  const before = E.evaluate(cur).score, secB = E.durationSec(cur);
+  let r, src = 'ai', warn = '';
+  try { r = aiOn() ? AI.sanitizeAdjust(await askAI(AI.adjustPrompt(cur, brand, req), $('ai-adj-go')), cur) : (src = 'rule', AI.ruleAdjust(req, cur)); }
+  catch (e) { warn = `⚠ AI 呼叫失敗（${esc(e.message)}），改用規則調整。<br>`; r = AI.ruleAdjust(req, cur); src = 'rule'; }
+  if (!r.changes.length) return showOut('ai-adj-out', warn + (src === 'ai' ? '🤖 AI 認為目前的設定已經符合這個需求，沒有改動。' + (r.explain ? '<br>' + esc(r.explain) : '') : '🔎 規則解析看不懂這個需求。可以試試上面的快速選項，或設定 AI 金鑰後用白話描述。'));
+  edit(() => { Object.assign(cur, AI.applyPatch(cur, r.patch)); });
+  const after = E.evaluate(cur).score, secA = E.durationSec(cur);
+  showOut('ai-adj-out', warn + `<b>${src === 'ai' ? '🤖 AI 改好了' : '🔎 規則調整'}</b>：${r.changes.map(esc).join('、')}${r.explain ? '<div>' + esc(r.explain) + '</div>' : ''}
+    <div class="note" style="margin-top:4px">辨識度 ${before} → <b>${after}</b>　長度 ${secB.toFixed(1)} → ${secA.toFixed(1)} 秒</div>`);
+  play(cur, 'std', d => flashPlaying($('roll'), d));
+});
+
+// 設定區
+const provSel = $('ai-provider');
+Object.entries(AI.PROVIDERS).forEach(([k, v]) => provSel.add(new Option(v.label, k)));
+function renderAiModels(p, keep) {
+  const c = aiCfg(), pv = AI.PROVIDERS[p];
+  $('ai-model').innerHTML = pv.models.map(m => `<option value="${m[0]}">${m[1]}</option>`).join('') || '<option value="">（請在下方填模型名稱）</option>';
+  if (keep && c.provider === p && c.model) $('ai-model').value = c.model;
+  $('ai-base-row').hidden = p !== 'custom';
+}
+function fillAiSettings() {
+  const c = aiCfg(); provSel.value = c.provider; renderAiModels(c.provider, true);
+  $('ai-model-custom').value = c.modelCustom || ''; $('ai-base').value = c.base || ''; $('ai-key').value = c.key || ''; $('ai-test-msg').textContent = '';
+}
+function saveAiSettings() {
+  lsSet(AI_KEY, JSON.stringify({ provider: provSel.value, model: $('ai-model').value, modelCustom: $('ai-model-custom').value.trim(), base: $('ai-base').value.trim(), key: $('ai-key').value.trim() }));
+  aiStatusText();
+}
+provSel.addEventListener('change', () => renderAiModels(provSel.value, false));
+$('ai-eye').addEventListener('click', () => { const k = $('ai-key'); k.type = k.type === 'password' ? 'text' : 'password'; });
+$('ai-test').addEventListener('click', async () => {
+  saveAiSettings();
+  if (!aiOn()) { $('ai-test-msg').textContent = '✗ 請先填金鑰（自訂端點要填網址與模型）'; return; }
+  $('ai-test-msg').textContent = '測試中…';
+  try { const t = await AI.callLLM(aiCfg(), '請只回傳這個 JSON：{"ok":true}'); $('ai-test-msg').textContent = '✓ 連線成功：' + String(t).trim().slice(0, 30); }
+  catch (e) { $('ai-test-msg').textContent = '✗ ' + e.message; }
+  setSummaries();
+});
+$('ai-clear').addEventListener('click', () => { lsDel(AI_KEY); fillAiSettings(); aiStatusText(); setSummaries(); $('ai-test-msg').textContent = '已清除金鑰'; });
+$('ai-setup').addEventListener('click', () => {
+  openSettings();
+  document.querySelectorAll('details.set-sec').forEach(d => { d.open = d.dataset.sec === 'ai'; });
+  setTimeout(() => $('ai-key').focus(), 50);
+});
+aiStatusText();
+
 /* ======================= 常用設定 ======================= */
 const OPEN_KEY = 'sls-set-open';
 function setSummaries() {
   $('sv-play').textContent = `音量 ${Math.round(SET.vol * 100)}%・動畫${SET.anim ? '開' : '關'}`;
   $('sv-export').textContent = `${SET.sr / 1000} kHz・${+SET.ch === 2 ? '立體聲' : '單聲道'}${SET.norm ? '・正規化' : ''}`;
   $('sv-data').textContent = `收藏 ${loadMine().length} 個`;
+  $('sv-ai').textContent = aiOn() ? AI.aiStatus(aiCfg()) : '未設定';
 }
 function openSettings() {
   $('set-vol').value = SET.vol; $('set-vol-v').textContent = Math.round(SET.vol * 100) + '%';
   $('set-anim').checked = !!SET.anim; $('set-autoplay').checked = !!SET.autoplay; $('set-sr').value = String(SET.sr); $('set-ch').value = String(SET.ch); $('set-norm').checked = !!SET.norm;
   let open = []; try { open = JSON.parse(lsGet(OPEN_KEY, '[]')); } catch (e) {}
   document.querySelectorAll('details.set-sec').forEach(d => { d.open = open.includes(d.dataset.sec); });
-  setSummaries(); $('settings-modal').classList.remove('hidden');
+  fillAiSettings(); setSummaries(); $('settings-modal').classList.remove('hidden');
 }
 function rememberOpen() { lsSet(OPEN_KEY, JSON.stringify([...document.querySelectorAll('details.set-sec')].filter(d => d.open).map(d => d.dataset.sec))); }
 document.querySelectorAll('details.set-sec').forEach(d => d.addEventListener('toggle', rememberOpen));
@@ -845,7 +1000,7 @@ $('settings-btn').addEventListener('click', openSettings);
 $('settings-ok').addEventListener('click', () => {
   SET.vol = +$('set-vol').value; SET.anim = $('set-anim').checked; SET.autoplay = $('set-autoplay').checked;
   SET.sr = +$('set-sr').value; SET.ch = +$('set-ch').value; SET.norm = $('set-norm').checked;
-  saveSet(); renderCache.clear(); $('settings-modal').classList.add('hidden');
+  saveSet(); saveAiSettings(); renderCache.clear(); $('settings-modal').classList.add('hidden');
 });
 function confirmBtn(btn, label, fn) {
   btn.addEventListener('click', () => {
@@ -878,7 +1033,7 @@ if (m) {
     fillBrand(); openEditor(d.l); toast('已載入分享的聲音 Logo，按 ▶ 試聽');
   } else toast('分享連結無法讀取');
 }
-window.__sls = { E, get cur() { return cur; }, get cands() { return cands; }, render, markSVG, SET, brand: () => brand };
+window.__sls = { AI, E, get cur() { return cur; }, get cands() { return cands; }, render, markSVG, SET, brand: () => brand };
 </script>
 
 <script>

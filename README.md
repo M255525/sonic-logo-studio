@@ -7,8 +7,9 @@
 - 逐音編輯、9 種程式合成樂器、調性／音階／速度／殘響、和弦與低音收尾、還原
 - 辨識度健檢（自訂規則評分）、四種情境試聽（App 開啟、片頭、門市、廣告結尾）
 - 匯出 WAV（短版／標準版／加長版）、MIDI、聲音品牌說明書（.md／列印 PDF）、分享連結
+- 🤖 AI 助理（自備金鑰 BYOK，7 家服務商）：白話描述品牌→自動設定並產生、幫我挑一個、用白話調整（再溫暖一點、短一點…）；沒有金鑰時改用關鍵字規則
 - 全部用 Web Audio 在瀏覽器內合成，無音檔素材、無外部函式庫、不上傳資料
 
-開 `index.html`（建議用本機伺服器，`python -m http.server 8882`）。說明見 `manual.html`。引擎測試：`node tools/test_engine.mjs`。
+開 `index.html`（建議用本機伺服器，`python -m http.server 8882`）。說明見 `manual.html`。測試：`node tools/test_engine.mjs`、`node tools/test_ai.mjs`。
 
 創作者：蔡豐全（Mark Tsai）｜旋律不保證與既有商標聲音不相似，正式商用前請自行查詢商標。

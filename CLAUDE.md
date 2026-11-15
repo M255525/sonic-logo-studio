@@ -2,6 +2,8 @@
 
 靜態網頁（`index.html`＋`engine.js`＋`manual.html`＋PWA 檔），無建置步驟、無外部 JS 函式庫（只用 Google Fonts：Noto Sans TC、Space Mono）。port 8882。2026-11-15 建立（使用者從「聲音相關工具發想」清單選了這個，功能細節都是我自定）。2026-11-15 上線：公開 repo <https://github.com/M255525/sonic-logo-studio>（使用者自己 `gh repo create`），GitHub Pages（Actions workflow，push 到 master 自動部署）<https://m255525.github.io/sonic-logo-studio/>。visitor-badge `m255525.soniclogostudio`。尚未放進創作者小鎮。
 
+警語另含 AI：金鑰只存本機、品牌描述會送到所選服務商、建議不一定準。
+
 視覺：品牌識別手冊風（米白方格紙 `#f3eee4`、墨黑 `#1b1a17`、朱紅 `#e2432a`、直角粗框），刻意和聲控大冒險的深藍遊戲風不同。
 
 ## 流程
@@ -16,6 +18,12 @@
 - `encodeWAV`（16-bit PCM）、`normalize`（峰值 ≤ 0.89 且有聲部分 RMS ≤ 0.2——只用峰值時八位元方波／口哨的響度是其他樂器的 3 倍）、`encodeMIDI`（SMF type 0，頻道 0 主旋律／1 和弦／2 低音，含 tempo 與 program change）、`encodeShare`／`decodeShare`（UTF-8 base64url）、`validLogo`（讀分享連結與收藏時擋壞資料）。
 - 改引擎跑 `node tools/test_engine.mjs`（25 項，含範例資料檢查，含 14 產業×5 音數×3 長度×6 候選全部合法）。
 
+## ai.js（AI 助理，BYOK）
+- 三個功能：01 白話描述→`brandPrompt`/`sanitizeBrand` 填品牌設定並自動產生候選；02「幫我挑一個」`pickPrompt`/`sanitizePick`；03 白話調整 `adjustPrompt`/`sanitizeAdjust`→`applyPatch`（經 `edit()` 所以可還原）。**AI 只把白話翻成設定，旋律仍由 engine 規則產生；所有 AI 回傳值都先 sanitize 夾範圍**（BPM 60～180、殘響 0～0.9、音符 3～8 個且 dur 吸附到合法值、未知樂器／音階丟掉、音域保護）。
+- 免金鑰版：`ruleBrand`（`IND_WORDS` 產業關鍵字＋`FEEL` 四軸正負詞）、`rulePick`（分數＋產業偏好樂器＋長度）、`ruleAdjust`（快速選項對應的關鍵字）。AI 呼叫失敗會自動退回規則版並顯示錯誤。注意關鍵字互相包含的坑：「高」會命中「高級」，所以升八度只認「明亮／高一點／高音／清脆」。
+- `callLLM` 與服務商清單、`geminiModelFix` 複製自開店前置清單 ai.js（不送圖片）；Gemini 用 `responseMimeType: application/json`。設定存 `sls-ai`，品牌描述存 `sls-ai-desc`。
+- 測試 `node tools/test_ai.mjs`（53 項，不呼叫 API）；瀏覽器端用 Playwright `page.route` 攔截 `generativelanguage.googleapis.com` 回傳假 JSON 測完整流程（含 400 錯誤退回規則），不用真金鑰。
+
 ## index.html 合成
 - 一律先用 `OfflineAudioContext` 渲染成 buffer 再播放（試聽與匯出同一份聲音）；`render()` 以參數 JSON 當 key 快取 40 筆，改設定會清快取。
 - 9 種樂器全是程式合成：bell（FM 3.5 倍）、marimba（基音＋4 倍＋10 倍泛音）、epiano（FM 1:1＋三角波）、pluck（鋸齒波＋濾波包絡）、synth（雙鋸齒 detune＋共振濾波）、chip（方波）、pad（三鋸齒＋正弦）、whistle（正弦＋顫音＋帶通噪音）、drop（滑音正弦）。殘響是固定種子噪音 IR（匯出可重現），接 DynamicsCompressor。
@@ -25,7 +33,7 @@
 跑馬燈（共用 Apps Script，`slsMarquee`）、操作手冊 `manual.html`（創作者區塊含 email 是從 voice-control-game/manual.html 用 awk 整段複製）、使用警語（頁面 `.warnbox`＋首訪 `#warn-modal`；重點：**旋律不保證與既有商標聲音／廣告歌不相似，商用前查智慧局商標檢索**、分數僅供參考、不上傳）、加入主畫面、訪客計數器、⚙ 常用設定（收合 `details.set-sec`：播放／匯出／資料／關於本工具，`sls-set-open`）。刪除類按鈕用「再按一次確認」，不用 `confirm()`。
 
 ## 儲存（localStorage，全部 try/catch）
-`sls-settings`、`sls-brand`、`sls-mine`、`sls-warned`、`sls-set-open`、`slsMarquee`。
+`sls-settings`、`sls-brand`、`sls-mine`、`sls-ai`（金鑰）、`sls-ai-desc`、`sls-warned`、`sls-set-open`、`slsMarquee`。
 
 ## 測試
 - 本機：`python -m http.server 8882`（launch.json 名稱 `sonic-logo-studio`）。Playwright MCP 被別的 session 占用時，改用 Python `playwright.sync_api` 寫腳本跑（放 scratchpad）。
