@@ -62,6 +62,10 @@ ok(mid[mid.length - 3] === 0xff && mid[mid.length - 2] === 0x2f, 'MIDI 結尾');
 const md = E.guideMarkdown(a1[0], b, E.evaluate(a1[0]));
 ok(md.includes('阿嬤的豆花') && md.includes('智慧財產局'), '說明書');
 ok(E.explain(a1[0], b).length >= 4, '說明');
+// 內建範例
+const { EXAMPLES } = await import('../examples.js');
+ok(EXAMPLES.length === 7 && EXAMPLES.every(x => E.validLogo(x.l) && x.tip && x.b.name === x.id && E.INDUSTRIES[x.b.industry]), '範例資料完整');
+ok(EXAMPLES.every(x => E.durationSec(x.l) < 5), '範例長度');
 console.log(`通過 ${pass}，失敗 ${fail}`);
 // 範例輸出
 for (const l of a1) console.log(l.name, E.KEYS[l.keyIdx], l.scale, l.bpm, l.notes.map(n => E.solfa(E.noteMidi(l, n), l.keyIdx)).join(' '), E.evaluate(l).score);

@@ -30,7 +30,7 @@ export function degToSemi(deg, scale) {
   return oct * 12 + st[i];
 }
 export const midiToHz = m => 440 * Math.pow(2, (m - 69) / 12);
-const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];   // 與 KEYS（調性選單）同一套寫法
 const SOLFA = ['Do', 'Do#', 'Re', 'Mi♭', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'Si♭', 'Si'];
 export const midiName = m => NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
 export const solfa = (m, keyIdx) => SOLFA[(((m - keyIdx) % 12) + 12) % 12];

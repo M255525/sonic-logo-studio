@@ -47,7 +47,7 @@
   button:disabled { opacity: .45; cursor: not-allowed; }
   button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
-  .step { background: var(--card); border: 2px solid var(--ink); margin-bottom: 18px; }
+  .step { scroll-margin-top: 36px; background: var(--card); border: 2px solid var(--ink); margin-bottom: 18px; }
   .step > h2 { margin: 0; font-size: 17px; font-weight: 900; padding: 8px 14px; border-bottom: 2px solid var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .step > h2 .no { font-family: var(--mono); background: var(--ink); color: var(--paper); padding: 0 8px; font-size: 14px; }
   .step > h2 .hint { font-weight: 400; font-size: 12.5px; color: var(--ink2); }
@@ -178,6 +178,11 @@
   footer { margin-top: 18px; font-size: 12.5px; color: var(--ink2); text-align: center; }
   footer a { color: inherit; }
 
+  .examples { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+  .examples > span { font-weight: 900; font-size: 13.5px; margin-right: 4px; }
+  .examples button { font-size: 13px; padding: 3px 10px; border-width: 1px; }
+  .examples button i { width: 10px; height: 10px; display: inline-block; background: var(--c); }
+  .exnote { background: #fff4ef; border-left: 4px solid var(--red); padding: 8px 10px; font-size: 13.5px; margin-bottom: 14px; }
   .modal { position: fixed; inset: 0; background: rgba(27, 26, 23, .6); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .modal.hidden { display: none; }
   .modal .box { background: var(--card); border: 3px solid var(--ink); max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
@@ -223,6 +228,7 @@
   <section class="step" id="step1">
     <h2><span class="no">01</span>品牌資料<span class="hint">名稱字數會決定音符數（中文一字一音），個性決定音階、樂器和速度</span></h2>
     <div class="body">
+      <div class="examples" id="examples"><span>📚 範例（虛構品牌，點了直接試聽）：</span></div>
       <div class="form-grid">
         <label class="f">品牌名稱 <input type="text" id="b-name" maxlength="20" placeholder="例如：阿嬤的豆花、星光咖啡、Mark Coffee"></label>
         <label class="f">產業 <small>選了會自動帶入個性，之後還可以再調</small><select id="b-ind"></select></label>
@@ -282,6 +288,7 @@
           </div>
         </div>
         <div class="side">
+          <div class="exnote" id="ex-note" hidden></div>
           <h3>辨識度健檢</h3>
           <div class="bigscore"><b id="ev-score">--</b><span>/ 100　<span class="note">自訂規則評分，僅供參考</span></span></div>
           <ul class="tips" id="ev-tips"></ul>
@@ -391,6 +398,7 @@
 
 <script type="module">
 import * as E from './engine.js';
+import { EXAMPLES } from './examples.js';
 const $ = id => document.getElementById(id);
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -615,6 +623,19 @@ function genCands() {
 $('gen-btn').addEventListener('click', () => { batch = 0; genCands(); $('step2').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
 $('more-btn').addEventListener('click', () => { batch++; genCands(); });
 
+/* 內建範例：直接載入品牌資料與旋律，跳到微調區並播放 */
+$('examples').insertAdjacentHTML('beforeend', EXAMPLES.map((x, i) => `<button type="button" data-ex="${i}" title="${esc(E.INDUSTRIES[x.b.industry].label)}"><i style="--c:${x.b.color}"></i>${esc(x.id)}</button>`).join(''));
+$('examples').addEventListener('click', e => {
+  const btn = e.target.closest('[data-ex]'); if (!btn) return;
+  const x = EXAMPLES[+btn.dataset.ex];
+  brand = Object.assign(E.defaultBrand(), { slogan: '', color: '#e2432a' }, JSON.parse(JSON.stringify(x.b)));
+  fillBrand(); saveBrand();
+  cands = []; curFrom = -1; batch = 0; $('step2').hidden = true; $('more-btn').disabled = true;
+  openEditor(JSON.parse(JSON.stringify(x.l)), x.tip);
+  $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  play(cur, 'std', d => flashPlaying($('roll'), d));
+});
+
 /* ======================= 2 候選 ======================= */
 function tagHTML(l) {
   return `<span>${E.KEYS[l.keyIdx]} ${E.SCALES[l.scale].label}</span><span>${E.INSTRUMENTS[l.inst].label}</span><span>${l.bpm} BPM</span><span>${E.durationSec(l).toFixed(1)}s</span>`;
@@ -647,7 +668,7 @@ E.KEYS.forEach((k, i) => keySel.add(new Option(k + ' 調', i)));
 Object.entries(E.SCALES).forEach(([k, v]) => scSel.add(new Option(v.label, k)));
 const DURS = [[0.25, '短（1/16）'], [0.33, '三連音'], [0.5, '中（1/8）'], [0.75, '附點'], [1, '長（1/4）'], [1.5, '更長'], [2, '很長'], [3, '最長']];
 function pushUndo() { undoStack.push(JSON.stringify(cur)); if (undoStack.length > 40) undoStack.shift(); $('undo-btn').disabled = false; }
-function openEditor(l) { cur = l; undoStack = []; $('undo-btn').disabled = true; ['step3', 'step4', 'step5'].forEach(id => { $(id).hidden = false; }); renderEditor(); }
+function openEditor(l, tip) { $('ex-note').hidden = !tip; $('ex-note').innerHTML = tip ? '📚 <b>範例說明</b>：' + esc(tip) : ''; cur = l; undoStack = []; $('undo-btn').disabled = true; ['step3', 'step4', 'step5'].forEach(id => { $(id).hidden = false; }); renderEditor(); }
 function renderEditor() {
   $('ed-title').textContent = cur.name;
   $('roll-svg').outerHTML = markSVG(cur, { color: brand.color, grid: true, labels: true }).replace('<svg ', '<svg id="roll-svg" ');

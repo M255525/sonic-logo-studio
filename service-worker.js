@@ -1,11 +1,12 @@
 // 僅供「加入主畫面」安裝需求使用：network-first + 同源快取備援，不快取跨網域請求（跑馬燈、訪客徽章）。
-const CACHE_NAME = 'sonic-logo-studio-shell-v1';
+const CACHE_NAME = 'sonic-logo-studio-shell-v2';
 const SHELL_FILES = [
   './',
   './index.html',
   './manifest.json',
   './manual.html',
   './engine.js',
+  './examples.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];
